@@ -1,0 +1,218 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Menu, X, ShoppingBag, Search, User } from "lucide-react"
+import { useCart } from "@/components/cart-provider"
+
+const navLinks = [
+  { label: "Trang chu", href: "#" },
+  { label: "Bo suu tap", href: "#collections" },
+  { label: "San pham", href: "#products" },
+  { label: "Ve chung toi", href: "#about" },
+]
+
+export function Navbar() {
+  const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [cartPop, setCartPop] = useState(false)
+  const { items, totalQuantity, isCartOpen, setCartOpen, toggleCart, updateItemQuantity, removeItem } = useCart()
+  const previousQuantity = useRef(totalQuantity)
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+  useEffect(() => {
+    if (totalQuantity > previousQuantity.current) {
+      setCartPop(true)
+      const timer = setTimeout(() => setCartPop(false), 350)
+      previousQuantity.current = totalQuantity
+      return () => clearTimeout(timer)
+    }
+    previousQuantity.current = totalQuantity
+  }, [totalQuantity])
+
+  useEffect(() => {
+    if (pathname === "/checkout") {
+      setCartOpen(false)
+    }
+  }, [pathname, setCartOpen])
+
+  return (
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+        <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+        {/* Logo */}
+        <Link href="/" className="font-serif text-2xl font-bold tracking-widest text-foreground">
+          <span className="[font-family:var(--font-nosifer)]">SHANE</span>
+          <span className="[font-family:var(--font-script)]">Tirgo</span>
+        </Link>
+
+        {/* Desktop nav */}
+        <ul className="hidden items-center gap-8 md:flex">
+          {navLinks.map((link) => (
+            <li key={link.label}>
+              <Link
+                href={link.href}
+                className="text-sm font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        {/* Icons */}
+        <div className="flex items-center gap-4">
+          <button aria-label="Tim kiem" className="text-foreground transition-colors hover:text-accent">
+            <Search className="h-5 w-5" />
+          </button>
+          <button aria-label="Tai khoan" className="hidden text-foreground transition-colors hover:text-accent md:block">
+            <User className="h-5 w-5" />
+          </button>
+          <button
+            aria-label="Gio hang"
+            onClick={toggleCart}
+            className={`relative text-foreground transition-all hover:text-accent ${cartPop ? "scale-125" : "scale-100"}`}
+          >
+            <ShoppingBag className="h-5 w-5" />
+            <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
+              {totalQuantity}
+            </span>
+          </button>
+
+          {/* Mobile toggle */}
+          <button
+            aria-label="Mo menu"
+            className="text-foreground md:hidden"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+        </nav>
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="border-t border-border bg-background md:hidden">
+            <ul className="flex flex-col px-6 py-4">
+              {navLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="block py-3 text-sm font-medium uppercase tracking-wider text-foreground transition-colors hover:text-accent"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </header>
+
+      <div
+        onClick={() => setCartOpen(false)}
+        className={`fixed inset-0 z-[70] bg-black/40 transition-opacity ${isCartOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      />
+      <aside
+        className={`fixed inset-y-0 right-0 z-[80] h-screen w-[75vw] md:w-[25vw] border-l border-border bg-background shadow-2xl transition-transform duration-300 ${
+          isCartOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between border-b border-border px-4 py-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Gio hang</p>
+              <h3 className="text-lg font-semibold text-foreground">{totalQuantity} san pham</h3>
+            </div>
+            <button
+              onClick={() => setCartOpen(false)}
+              className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+              aria-label="Dong gio hang"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="flex-1 space-y-3 overflow-y-auto p-4">
+            {items.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Chua co san pham trong gio hang.</p>
+            ) : (
+              items.map((item) => (
+                <div key={item.lineId} className="grid min-h-[96px] grid-cols-[64px_1fr_auto] items-stretch gap-3 rounded-lg border border-border p-3">
+                  <div className="h-full w-16 overflow-hidden rounded-md border border-border bg-muted">
+                    <img
+                      src={item.imageUrl || "/images/product-1.jpeg"}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  <div className="min-w-0 space-y-1">
+                    <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">Mau: {item.color || "-"}</p>
+                    <p className="text-xs text-muted-foreground">Size: {item.size || "-"}</p>
+                    <p className="text-xs font-medium text-foreground">
+                      {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(item.price)}
+                    </p>
+                  </div>
+
+                  <div className="flex h-full flex-col items-end justify-between">
+                    <button
+                      onClick={() => removeItem(item.lineId)}
+                      className="rounded-md p-1 text-red-600 hover:bg-red-50"
+                      aria-label="Xoa san pham"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateItemQuantity(item.lineId, item.quantity - 1)}
+                        className="rounded border border-border px-2 py-0.5 text-sm"
+                      >
+                        -
+                      </button>
+                      <span className="min-w-6 text-center text-sm font-medium">{item.quantity}</span>
+                      <button
+                        onClick={() => updateItemQuantity(item.lineId, item.quantity + 1)}
+                        className="rounded border border-border px-2 py-0.5 text-sm"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="border-t border-border p-4">
+            <div className="mb-3 flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Tam tinh</span>
+              <span className="font-semibold text-foreground">
+                {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(subtotal)}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setCartOpen(false)}
+                className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
+              >
+                Tro ve
+              </button>
+              <Link
+                href="/checkout"
+                onClick={() => setCartOpen(false)}
+                className="rounded-md bg-foreground px-4 py-2 text-center text-sm font-medium text-background hover:bg-foreground/90"
+              >
+                Thanh toan
+              </Link>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </>
+  )
+}

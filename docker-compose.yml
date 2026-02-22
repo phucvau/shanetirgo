@@ -1,0 +1,92 @@
+name: shanetirgo-stack
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shanetirgo/web:local
+    container_name: shanetirgo-web
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PRODUCT_SERVICE_URL: http://product-service:4001
+      ORDER_SERVICE_URL: http://order-service:4002
+    depends_on:
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+
+  product-service:
+    build:
+      context: ./services/product-service
+    image: shanetirgo/product-service:local
+    container_name: shanetirgo-product-service
+    ports:
+      - "4001:4001"
+    environment:
+      PORT: 4001
+      PUBLIC_BASE_URL: http://localhost:4001
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: shanetirgo
+      MYSQL_USER: shane
+      MYSQL_PASSWORD: shane123
+    volumes:
+      - ./services/product-service/uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:4001/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  order-service:
+    build:
+      context: ./services/order-service
+    image: shanetirgo/order-service:local
+    container_name: shanetirgo-order-service
+    ports:
+      - "4002:4002"
+    environment:
+      PORT: 4002
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: shanetirgo
+      MYSQL_USER: shane
+      MYSQL_PASSWORD: shane123
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:4002/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  mysql:
+    image: mysql:8.0
+    container_name: shanetirgo-mysql
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: shanetirgo
+      MYSQL_USER: shane
+      MYSQL_PASSWORD: shane123
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql-data:

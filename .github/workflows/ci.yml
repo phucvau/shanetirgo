@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  web-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: |
+          if node -e "const p=require('./package.json'); process.exit(p.devDependencies?.eslint ? 0 : 1)"; then
+            npm run lint
+          else
+            echo "eslint is not configured in devDependencies. Skipping lint."
+          fi
+
+      - name: Build
+        run: npm run build
+
+  service-ci:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [product-service, order-service]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: services/${{ matrix.service }}
+
+      - name: Build Docker image
+        run: docker build -t shanetirgo/${{ matrix.service }}:ci .
+        working-directory: services/${{ matrix.service }}
