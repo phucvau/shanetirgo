@@ -14,20 +14,8 @@ const uploadDir = path.join(__dirname, "uploads");
 
 fs.mkdirSync(uploadDir, { recursive: true });
 
-const storage = multer.diskStorage({
-  destination: (_, __, callback) => callback(null, uploadDir),
-  filename: (_, file, callback) => {
-    const ext = path.extname(file.originalname || "");
-    const safeBase = (path.basename(file.originalname || "image", ext) || "image")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-    callback(null, `${Date.now()}-${safeBase}${ext || ".jpg"}`);
-  },
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
@@ -97,8 +85,21 @@ app.post("/upload-image", upload.single("image"), async (req, res) => {
     return res.status(400).json({ message: "Image file is required" });
   }
 
-  const imageUrl = `${publicBaseUrl}/uploads/${req.file.filename}`;
-  return res.status(201).json({ imageUrl });
+  try {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    const ext = path.extname(req.file.originalname || "");
+    const safeBase = (path.basename(req.file.originalname || "image", ext) || "image")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    const filename = `${Date.now()}-${safeBase}${ext || ".jpg"}`;
+    fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+
+    const imageUrl = `${publicBaseUrl}/uploads/${filename}`;
+    return res.status(201).json({ imageUrl });
+  } catch (error) {
+    return res.status(500).json({ message: "Cannot save image", error: error.message });
+  }
 });
 
 app.post("/products", async (req, res) => {
