@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Upload } from "lucide-react";
+import { Plus, Search, Upload, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -183,6 +183,22 @@ export default function ProductsPage() {
     }
   }
 
+  async function handleDelete(productId: number) {
+    setMessage("");
+    try {
+      const response = await fetch(`${PRODUCT_API_BASE}/products/${productId}`, {
+        method: "DELETE",
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || "Xoa san pham that bai.");
+      }
+      setProductList((prev) => prev.filter((item) => item.id !== productId));
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -242,18 +258,19 @@ export default function ProductsPage() {
                 <TableHead>Ton kho</TableHead>
                 <TableHead>Size</TableHead>
                 <TableHead>Chat lieu</TableHead>
+                <TableHead className="w-[64px] text-right">Xoa</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                     Dang tai du lieu...
                   </TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                     Khong tim thay san pham nao.
                   </TableCell>
                 </TableRow>
@@ -281,6 +298,17 @@ export default function ProductsPage() {
                     <TableCell>{product.stock}</TableCell>
                     <TableCell>{product.size}</TableCell>
                     <TableCell>{product.material}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        onClick={() => handleDelete(product.id)}
+                        aria-label={`Xoa ${product.name}`}
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}

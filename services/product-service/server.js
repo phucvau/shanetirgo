@@ -9,7 +9,11 @@ const { defineProductModel } = require("./src/models/product.model");
 
 const app = express();
 const port = Number(process.env.PORT || 4001);
-const publicBaseUrl = process.env.PUBLIC_BASE_URL || `http://localhost:${port}`;
+const publicBaseUrl =
+  process.env.PUBLIC_BASE_URL ||
+  (process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : `http://localhost:${port}`);
 const uploadDir = path.join(__dirname, "uploads");
 
 fs.mkdirSync(uploadDir, { recursive: true });
@@ -163,6 +167,35 @@ app.post("/products", async (req, res) => {
     return res.status(201).json(product);
   } catch (error) {
     return res.status(500).json({ message: "Cannot create product", error: error.message });
+  }
+});
+
+app.delete("/products/:id", async (req, res) => {
+  const productId = Number(req.params.id);
+  if (!Number.isInteger(productId) || productId <= 0) {
+    return res.status(400).json({ message: "Invalid product id" });
+  }
+
+  try {
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const imageUrl = String(product.imageUrl || "");
+    const uploadsPrefix = `${publicBaseUrl}/uploads/`;
+    if (imageUrl.startsWith(uploadsPrefix)) {
+      const filename = imageUrl.slice(uploadsPrefix.length);
+      const filePath = path.join(uploadDir, filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    await product.destroy();
+    return res.status(200).json({ message: "Product deleted" });
+  } catch (error) {
+    return res.status(500).json({ message: "Cannot delete product", error: error.message });
   }
 });
 
