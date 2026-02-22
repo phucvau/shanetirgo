@@ -23,17 +23,34 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(uploadDir));
 
-const sequelize = new Sequelize(
-  process.env.MYSQL_DATABASE || "shanetirgo",
-  process.env.MYSQL_USER || "shane",
-  process.env.MYSQL_PASSWORD || "shane123",
-  {
-  host: process.env.MYSQL_HOST || "localhost",
-  port: Number(process.env.MYSQL_PORT || 3306),
-    dialect: "mysql",
-    logging: false,
-  }
+const mysqlDatabase =
+  process.env.MYSQL_DATABASE ||
+  process.env.MYSQLDATABASE ||
+  "shanetirgo";
+const mysqlUser =
+  process.env.MYSQL_USER ||
+  process.env.MYSQLUSER ||
+  "shane";
+const mysqlPassword =
+  process.env.MYSQL_PASSWORD ||
+  process.env.MYSQLPASSWORD ||
+  "shane123";
+const mysqlHost =
+  process.env.MYSQL_HOST ||
+  process.env.MYSQLHOST ||
+  "localhost";
+const mysqlPort = Number(
+  process.env.MYSQL_PORT ||
+    process.env.MYSQLPORT ||
+    3306
 );
+
+const sequelize = new Sequelize(mysqlDatabase, mysqlUser, mysqlPassword, {
+  host: mysqlHost,
+  port: mysqlPort,
+  dialect: "mysql",
+  logging: false,
+});
 
 const Product = defineProductModel(sequelize);
 
@@ -157,7 +174,7 @@ async function bootstrap() {
       console.log(`product-service listening on ${port}`);
     });
   } catch (error) {
-    console.error("Cannot start product-service:", error.message);
+    console.error("Cannot start product-service:", error);
     process.exit(1);
   }
 }
