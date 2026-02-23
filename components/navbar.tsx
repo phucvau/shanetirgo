@@ -187,7 +187,7 @@ export function Navbar() {
             )}
           </div>
 
-          <div className="border-t border-border bg-background px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-4">
+          <div className="border-t border-border bg-background px-4 pb-[calc(env(safe-area-inset-bottom)+28px)] pt-4">
             <div className="mb-3 flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Tam tinh</span>
               <span className="font-semibold text-foreground">
