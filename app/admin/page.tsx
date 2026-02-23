@@ -81,7 +81,7 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {/* Stat Cards */}
+      {/* STất cảrds */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title}>
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
             href="/admin/orders"
             className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Xem tat ca
+            Xem Tất cả
             <ArrowUpRight className="size-3" />
           </Link>
         </CardHeader>

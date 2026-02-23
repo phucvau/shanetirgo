@@ -31,10 +31,10 @@ export function TestimonialsSection() {
         {/* Header */}
         <div className="mb-16 text-center">
           <p className="mb-3 text-sm font-medium uppercase tracking-[0.3em] text-muted-foreground">
-            Khach hang noi gi
+            Khách hàng nói gì
           </p>
           <h2 className="font-serif text-4xl font-bold text-foreground md:text-5xl text-balance">
-            Duoc tin tuong boi hang nghin khach hang
+            Được tin tưởng bởi hàng nghìn khách hàng
           </h2>
         </div>
 

@@ -3,23 +3,23 @@ import { Truck, RefreshCw, Shield, Headphones } from "lucide-react"
 const features = [
   {
     icon: Truck,
-    title: "Giao hang mien phi",
-    description: "Mien phi van chuyen cho don hang tu 500.000d.",
+    title: "Giao hàng miễn phí",
+    description: "Miễn phí vận chuyển cho đơn hàng từ 500.000đ.",
   },
   {
     icon: RefreshCw,
-    title: "Doi tra de dang",
-    description: "Doi tra mien phi trong vong 30 ngay.",
+    title: "Đổi trả dễ dàng",
+    description: "Đổi trả miễn phí trong vòng 2 tuần",
   },
   {
     icon: Shield,
-    title: "Chat luong dam bao",
-    description: "sản phẩm chinh hang, chat lieu cao cap.",
+    title: "Chất lượng đảm bảo",
+    description: "Sản phẩm chính hãng, chất liệu cao cấp.",
   },
   {
     icon: Headphones,
-    title: "Ho tro 24/7",
-    description: "Doi ngu tu van luon san sang phuc vu.",
+    title: "Hỗ trợ 24/7",
+    description: "Đội ngũ tư vấn luôn sẵn sàng phục vụ.",
   },
 ]
 

@@ -24,20 +24,20 @@ export function HeroSection() {
       <div className="relative z-10 mx-auto max-w-7xl px-6 py-32 lg:px-8">
         <div className="max-w-2xl">
           <p className="mb-4 text-sm font-medium uppercase tracking-[0.3em] text-background/80">
-            Bộ sưu tập moi 2026
+            Bộ sưu tập mới 2026
           </p>
           <h1 className="font-serif text-5xl font-bold leading-tight text-background md:text-7xl lg:text-8xl">
-            <span className="text-balance">Phong cach dinh nghia ban</span>
+            <span className="text-balance">Phong cách định nghĩa bạn</span>
           </h1>
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-background/80">
-            Kham pha Bộ sưu tập thoi trang hien dai voi thiet ke tinh te, chat lieu cao cap va su sang tao khong gioi han.
+            Khám phá bộ sưu tập thời trang hiện đại với thiết kế tinh tế, chất liệu cao cấp và sự sáng tạo không giới hạn.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="#products"
               className="group inline-flex items-center gap-2 bg-background px-8 py-4 text-sm font-medium uppercase tracking-wider text-foreground transition-all hover:bg-accent hover:text-accent-foreground"
             >
-              Kham pha ngay
+              Khám phá ngay
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link

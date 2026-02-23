@@ -4,20 +4,20 @@ import { ArrowRight } from "lucide-react"
 
 const collections = [
   {
-    title: "Xuan He 2026",
-    description: "Nhung thiet ke thoang mat, phong khoang cho ngay nang.",
+    title: "Xuân Hè 2026",
+    description: "Những thiết kế thoáng mát, phóng khoáng cho ngày nắng.",
     image: "/images/collection-1.jpg",
     href: "#",
   },
   {
-    title: "Thu Dong 2026",
-    description: "Am ap, ca tinh voi tong mau tram am.",
+    title: "Thu Đông 2026",
+    description: "Ấm áp, cá tính với tổng màu trầm ấm.",
     image: "/images/collection-2.jpg",
     href: "#",
   },
   {
-    title: "Phu kien",
-    description: "Diem nhan hoan hao cho moi trang phuc.",
+    title: "Phụ kiện",
+    description: "Điểm nhấn hoàn hảo cho mọi trang phục.",
     image: "/images/collection-3.jpg",
     href: "#",
   },
@@ -32,7 +32,7 @@ export function CollectionsSection() {
           Bộ sưu tập
         </p>
         <h2 className="font-serif text-4xl font-bold text-foreground md:text-5xl text-balance">
-          Duoc tuyen chon dac biet cho ban
+          Đặc biệt dành riêng cho bạn
         </h2>
       </div>
 
@@ -63,7 +63,7 @@ export function CollectionsSection() {
                 {col.description}
               </p>
               <div className="mt-4 flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-background">
-                Kham pha
+                Khám phá
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </div>
             </div>

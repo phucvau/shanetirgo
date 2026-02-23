@@ -18,7 +18,7 @@ export default function Page() {
         <CollectionsSection />
         <ProductsSection />
         <AboutSection />
-        <TestimonialsSection />
+        {/* <TestimonialsSection /> */}
         <NewsletterSection />
       </main>
       <Footer />

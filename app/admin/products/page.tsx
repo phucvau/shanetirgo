@@ -35,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const PRODUCT_API_BASE = process.env.NEXT_PUBLIC_PRODUCT_API_URL || "http://localhost:4001";
 
-const categories = ["Ao", "Quan", "Vay", "Phu kien"];
+const categories = ["Ao", "Quan", "Vay", "Phụ kiện"];
 
 type Product = {
   id: number;
@@ -134,7 +134,7 @@ export default function ProductsPage() {
       !formDescription.trim() ||
       !formImageFile
     ) {
-      setMessage("Vui long nhap day du tat ca truong va chon anh.");
+      setMessage("Vui long nhap day du Tất cả truong va chon anh.");
       return;
     }
 
@@ -231,7 +231,7 @@ export default function ProductsPage() {
                 <SelectValue placeholder="Danh muc" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tat ca danh muc</SelectItem>
+                <SelectItem value="all">Tất cả danh muc</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat}

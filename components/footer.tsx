@@ -1,9 +1,9 @@
 import Link from "next/link"
 
 const footerLinks = {
-  "sản phẩm": ["Ao", "Quan", "Vay", "Phu kien", "Bộ sưu tập moi"],
-  "Ho tro": ["Huong dan mua hang", "Chinh sach doi tra", "Van chuyen", "Lien he"],
-  "Cong ty": ["Về chúng tôi", "Tuyen dung", "Blog", "Bao chi"],
+  "Sản phẩm": ["Áo", "Quần", "Váy", "Phụ kiện", "Bộ sưu tập mới"],
+  "Hỗ trợ": ["Hướng dẫn mua hàng", "Chính sách đổi trả", "ận chuyển", "Liên hệ"],
+  "Công ty": ["Về chúng tôi", "Tuyển dụng", "Blog", "Báo chí"],
 }
 
 export function Footer() {
@@ -17,7 +17,7 @@ export function Footer() {
 <span className="[font-family:var(--font-nosifer)]">SHANE</span>
   <span className="[font-family:var(--font-script)]">Tirgo</span>                </Link>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              Thoi trang hien dai, sang trong va tinh te cho nguoi Viet.
+              Thời trang hiện đại, sang trọng và tinh tế cho người Việt.
             </p>
           </div>
 
@@ -46,14 +46,14 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 md:flex-row">
           <p className="text-xs text-muted-foreground">
-            2026 ShaneTirgo. Tat ca quyen duoc bao luu.
+            2026 ShaneTirgo. Tất cả quyền được bảo lưu.
           </p>
           <div className="flex gap-6">
             <Link href="#" className="text-xs text-muted-foreground transition-colors hover:text-foreground">
-              Dieu khoan su dung
+              Điều khoản sử dụng
             </Link>
             <Link href="#" className="text-xs text-muted-foreground transition-colors hover:text-foreground">
-              Chinh sach bao mat
+              Chính sách bảo mật
             </Link>
           </div>
         </div>

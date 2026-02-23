@@ -17,17 +17,17 @@ export function AboutSection() {
         {/* Content */}
         <div>
           <p className="mb-3 text-sm font-medium uppercase tracking-[0.3em] text-muted-foreground">
-            Cau chuyen cua chung toi
+            Câu chuyện của chúng tôi
           </p>
           <h2 className="font-serif text-4xl font-bold text-foreground md:text-5xl text-balance">
-            Thoi trang la nghe thuat cua su tu tin
+            Thời trang là nghệ thuật của sự tự tin
           </h2>
           <div className="mt-8 space-y-4 text-base leading-relaxed text-muted-foreground">
             <p>
-              ShaneTirgo ra doi tu niem dam me bat tan voi thoi trang va su khat khao mang den nhung thiet ke doc dao, tinh te cho nguoi Viet.
+              ShaneTirgo ra đời từ niềm đam mê bất tận với thời trang và sự khát khao mang đến những thiết kế độc đáo, tinh tế cho người Việt.
             </p>
             <p>
-              Moi sản phẩm deu duoc che tac tu nhung chat lieu cao cap nhat, voi su chu y den tung chi tiet nho nhat. Chung toi tin rang thoi trang khong chi la quan ao ma la cach ban the hien chinh minh.
+              Mỗi sản phẩm đều được chế tác từ những chất liệu cao cấp nhất, với sự chú ý đến từng chi tiết nhỏ nhất. Chúng tôi tin rằng thời trang không chỉ là quần áo mà là cách bạn thể hiện chính mình.
             </p>
           </div>
 
@@ -35,15 +35,15 @@ export function AboutSection() {
           <div className="mt-12 grid grid-cols-3 gap-8 border-t border-border pt-8">
             <div>
               <p className="font-serif text-3xl font-bold text-foreground">5+</p>
-              <p className="mt-1 text-sm text-muted-foreground">Nam kinh nghiem</p>
+              <p className="mt-1 text-sm text-muted-foreground">Năm kinh nghiệm</p>
             </div>
             <div>
               <p className="font-serif text-3xl font-bold text-foreground">50K+</p>
-              <p className="mt-1 text-sm text-muted-foreground">Khach hang</p>
+              <p className="mt-1 text-sm text-muted-foreground">Khách hàng</p>
             </div>
             <div>
               <p className="font-serif text-3xl font-bold text-foreground">200+</p>
-              <p className="mt-1 text-sm text-muted-foreground">Thiet ke</p>
+              <p className="mt-1 text-sm text-muted-foreground">Thiết kế</p>
             </div>
           </div>
         </div>

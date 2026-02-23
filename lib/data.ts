@@ -241,15 +241,15 @@ export const customers: Customer[] = [
 export const collections: Collection[] = [
   {
     id: 1,
-    title: "Xuan He 2026",
-    description: "Nhung thiet ke thoang mat, phong khoang cho ngay nang.",
+    title: "Xuân Hè 2026",
+    description: "Những thiết kế thoáng mát, phóng khoáng cho ngày nắng.",
     image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=80",
     href: "#",
     productCount: 24,
   },
   {
     id: 2,
-    title: "Thu Dong 2026",
+    title: "Thu Đông 2026",
     description: "Am ap, ca tinh voi tong mau tram am.",
     image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80",
     href: "#",
@@ -257,7 +257,7 @@ export const collections: Collection[] = [
   },
   {
     id: 3,
-    title: "Phu kien",
+    title: "Phụ kiện",
     description: "Diem nhan hoan hao cho moi trang phuc.",
     image: "https://images.unsplash.com/photo-1611923134239-b9be5816e23c?w=600&q=80",
     href: "#",

@@ -86,7 +86,7 @@ export default function OrdersPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="all">
-              Tat ca ({orderList.length})
+              Tất cả ({orderList.length})
             </TabsTrigger>
             {allStatuses.map((s) => (
               <TabsTrigger key={s} value={s}>
