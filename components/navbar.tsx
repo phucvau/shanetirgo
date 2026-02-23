@@ -116,11 +116,11 @@ export function Navbar() {
         className={`fixed inset-0 z-[70] bg-black/40 transition-opacity ${isCartOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       />
       <aside
-        className={`fixed inset-y-0 right-0 z-[80] h-screen w-[75vw] md:w-[25vw] border-l border-border bg-background shadow-2xl transition-transform duration-300 ${
+        className={`fixed inset-y-0 right-0 z-[80] h-[100dvh] w-[75vw] md:w-[25vw] border-l border-border bg-background shadow-2xl transition-transform duration-300 ${
           isCartOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex h-full flex-col">
+        <div className="flex h-[100dvh] flex-col">
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Gio hang</p>
@@ -187,7 +187,7 @@ export function Navbar() {
             )}
           </div>
 
-          <div className="border-t border-border p-4">
+          <div className="border-t border-border bg-background px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-4">
             <div className="mb-3 flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Tam tinh</span>
               <span className="font-semibold text-foreground">
