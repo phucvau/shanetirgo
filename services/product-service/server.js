@@ -9,10 +9,17 @@ const { defineProductModel } = require("./src/models/product.model");
 const app = express();
 const port = Number(process.env.PORT || 4001);
 
+const cloudinaryCloudName =
+  process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD || process.env.CLOUD_NAME || "";
+const cloudinaryApiKey =
+  process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_KEY || process.env.API_KEY || "";
+const cloudinaryApiSecret =
+  process.env.CLOUDINARY_API_SECRET || process.env.CLOUDINARY_SECRET || process.env.API_SECRET || "";
+
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
-  api_key: process.env.CLOUDINARY_API_KEY || "",
-  api_secret: process.env.CLOUDINARY_API_SECRET || "",
+  cloud_name: cloudinaryCloudName,
+  api_key: cloudinaryApiKey,
+  api_secret: cloudinaryApiSecret,
 });
 
 const upload = multer({
@@ -55,11 +62,7 @@ const sequelize = new Sequelize(mysqlDatabase, mysqlUser, mysqlPassword, {
 const Product = defineProductModel(sequelize);
 
 function isCloudinaryConfigured() {
-  return Boolean(
-    process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
-  );
+  return Boolean(cloudinaryCloudName && cloudinaryApiKey && cloudinaryApiSecret);
 }
 
 function uploadToCloudinary(fileBuffer, originalName) {
@@ -122,7 +125,11 @@ function slugify(value) {
 app.get("/health", async (_, res) => {
   try {
     await sequelize.authenticate();
-    res.status(200).json({ status: "ok", service: "product-service" });
+    res.status(200).json({
+      status: "ok",
+      service: "product-service",
+      cloudinaryConfigured: isCloudinaryConfigured(),
+    });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }
@@ -168,6 +175,7 @@ app.post("/upload-image", upload.single("image"), async (req, res) => {
     const uploaded = await uploadToCloudinary(req.file.buffer, req.file.originalname);
     return res.status(201).json({ imageUrl: uploaded.secure_url, publicId: uploaded.public_id });
   } catch (error) {
+    console.error("Cloudinary upload failed:", error);
     return res.status(500).json({ message: "Cannot upload image", error: error.message });
   }
 });
@@ -258,3 +266,16 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+app.use((error, _, res, __) => {
+  if (error && error.name === "MulterError") {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ message: "Image is too large. Max size is 5MB." });
+    }
+    return res.status(400).json({ message: "Upload failed", error: error.message });
+  }
+  if (error) {
+    return res.status(500).json({ message: "Unexpected server error", error: error.message });
+  }
+  return res.status(500).json({ message: "Unexpected server error" });
+});
