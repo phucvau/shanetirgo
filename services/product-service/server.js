@@ -1,22 +1,19 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
 const multer = require("multer");
+const { v2: cloudinary } = require("cloudinary");
 const { Sequelize } = require("sequelize");
 const { Op } = require("sequelize");
 const { defineProductModel } = require("./src/models/product.model");
 
 const app = express();
 const port = Number(process.env.PORT || 4001);
-const publicBaseUrl =
-  process.env.PUBLIC_BASE_URL ||
-  (process.env.RAILWAY_PUBLIC_DOMAIN
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-    : `http://localhost:${port}`);
-const uploadDir = path.join(__dirname, "uploads");
 
-fs.mkdirSync(uploadDir, { recursive: true });
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
+  api_key: process.env.CLOUDINARY_API_KEY || "",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "",
+});
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -25,7 +22,6 @@ const upload = multer({
 
 app.use(cors());
 app.use(express.json());
-app.use("/uploads", express.static(uploadDir));
 
 const mysqlDatabase =
   process.env.MYSQL_DATABASE ||
@@ -57,6 +53,62 @@ const sequelize = new Sequelize(mysqlDatabase, mysqlUser, mysqlPassword, {
 });
 
 const Product = defineProductModel(sequelize);
+
+function isCloudinaryConfigured() {
+  return Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET
+  );
+}
+
+function uploadToCloudinary(fileBuffer, originalName) {
+  return new Promise((resolve, reject) => {
+    const baseName = String(originalName || "image")
+      .split(".")
+      .slice(0, -1)
+      .join(".")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || "image";
+
+    const publicId = `${Date.now()}-${baseName}`;
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "shanetirgo/products",
+        public_id: publicId,
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        return resolve(result);
+      }
+    );
+    stream.end(fileBuffer);
+  });
+}
+
+function getCloudinaryPublicIdFromUrl(imageUrl) {
+  try {
+    if (!imageUrl || !imageUrl.includes("/upload/")) return null;
+    const url = new URL(imageUrl);
+    if (!url.hostname.includes("res.cloudinary.com")) return null;
+
+    const marker = "/upload/";
+    const idx = url.pathname.indexOf(marker);
+    if (idx < 0) return null;
+    let pathAfterUpload = url.pathname.slice(idx + marker.length);
+
+    // Remove version prefix like v1234567890/
+    pathAfterUpload = pathAfterUpload.replace(/^v\d+\//, "");
+
+    // Remove extension
+    pathAfterUpload = pathAfterUpload.replace(/\.[a-zA-Z0-9]+$/, "");
+    return pathAfterUpload || null;
+  } catch (_) {
+    return null;
+  }
+}
 
 function slugify(value) {
   return value
@@ -105,21 +157,18 @@ app.post("/upload-image", upload.single("image"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "Image file is required" });
   }
+  if (!isCloudinaryConfigured()) {
+    return res.status(500).json({
+      message: "Cloudinary is not configured",
+      error: "Missing CLOUDINARY_CLOUD_NAME/CLOUDINARY_API_KEY/CLOUDINARY_API_SECRET",
+    });
+  }
 
   try {
-    fs.mkdirSync(uploadDir, { recursive: true });
-    const ext = path.extname(req.file.originalname || "");
-    const safeBase = (path.basename(req.file.originalname || "image", ext) || "image")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-    const filename = `${Date.now()}-${safeBase}${ext || ".jpg"}`;
-    fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
-
-    const imageUrl = `${publicBaseUrl}/uploads/${filename}`;
-    return res.status(201).json({ imageUrl });
+    const uploaded = await uploadToCloudinary(req.file.buffer, req.file.originalname);
+    return res.status(201).json({ imageUrl: uploaded.secure_url, publicId: uploaded.public_id });
   } catch (error) {
-    return res.status(500).json({ message: "Cannot save image", error: error.message });
+    return res.status(500).json({ message: "Cannot upload image", error: error.message });
   }
 });
 
@@ -183,13 +232,9 @@ app.delete("/products/:id", async (req, res) => {
     }
 
     const imageUrl = String(product.imageUrl || "");
-    const uploadsPrefix = `${publicBaseUrl}/uploads/`;
-    if (imageUrl.startsWith(uploadsPrefix)) {
-      const filename = imageUrl.slice(uploadsPrefix.length);
-      const filePath = path.join(uploadDir, filename);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+    const publicId = getCloudinaryPublicIdFromUrl(imageUrl);
+    if (publicId && isCloudinaryConfigured()) {
+      await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
     }
 
     await product.destroy();
