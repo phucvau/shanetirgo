@@ -70,7 +70,7 @@ export function Navbar() {
             <User className="h-5 w-5" />
           </button>
           <button
-            aria-label="Gio hang"
+            aria-label="Giỏ hàng"
             onClick={toggleCart}
             className={`relative text-foreground transition-all hover:text-accent ${cartPop ? "scale-125" : "scale-100"}`}
           >
@@ -123,13 +123,13 @@ export function Navbar() {
         <div className="flex h-[100dvh] flex-col">
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Gio hang</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Giỏ hàng</p>
               <h3 className="text-lg font-semibold text-foreground">{totalQuantity} sản phẩm</h3>
             </div>
             <button
               onClick={() => setCartOpen(false)}
               className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
-              aria-label="Dong gio hang"
+              aria-label="Đóng giỏ hàng"
             >
               <X className="h-4 w-4" />
             </button>
@@ -137,7 +137,7 @@ export function Navbar() {
 
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {items.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Chua co sản phẩm trong gio hang.</p>
+              <p className="text-sm text-muted-foreground">Chưa có sản phẩm nào trong giỏ hàng.</p>
             ) : (
               items.map((item) => (
                 <div key={item.lineId} className="grid min-h-[96px] grid-cols-[64px_1fr_auto] items-stretch gap-3 rounded-lg border border-border p-3">
@@ -151,7 +151,7 @@ export function Navbar() {
 
                   <div className="min-w-0 space-y-1">
                     <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">Mau: {item.color || "-"}</p>
+                    <p className="text-xs text-muted-foreground">Màu: {item.color || "-"}</p>
                     <p className="text-xs text-muted-foreground">Size: {item.size || "-"}</p>
                     <p className="text-xs font-medium text-foreground">
                       {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(item.price)}
@@ -162,7 +162,7 @@ export function Navbar() {
                     <button
                       onClick={() => removeItem(item.lineId)}
                       className="rounded-md p-1 text-red-600 hover:bg-red-50"
-                      aria-label="Xoa sản phẩm"
+                      aria-label="Xóa sản phẩm"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -189,7 +189,7 @@ export function Navbar() {
 
           <div className="border-t border-border bg-background px-4 pb-[calc(env(safe-area-inset-bottom)+28px)] pt-4">
             <div className="mb-3 flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Tam tinh</span>
+              <span className="text-muted-foreground">Tạm tính</span>
               <span className="font-semibold text-foreground">
                 {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(subtotal)}
               </span>
@@ -199,14 +199,14 @@ export function Navbar() {
                 onClick={() => setCartOpen(false)}
                 className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
               >
-                Tro ve
+                Trở về
               </button>
               <Link
                 href="/checkout"
                 onClick={() => setCartOpen(false)}
                 className="rounded-md bg-foreground px-4 py-2 text-center text-sm font-medium text-background hover:bg-foreground/90"
               >
-                Thanh toan
+                Thanh toán
               </Link>
             </div>
           </div>

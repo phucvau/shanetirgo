@@ -2,7 +2,7 @@ import Link from "next/link"
 
 const footerLinks = {
   "Sản phẩm": ["Áo", "Quần", "Váy", "Phụ kiện", "Bộ sưu tập mới"],
-  "Hỗ trợ": ["Hướng dẫn mua hàng", "Chính sách đổi trả", "ận chuyển", "Liên hệ"],
+  "Hỗ trợ": ["Hướng dẫn mua hàng", "Chính sách đổi trả", "Vận chuyển", "Liên hệ"],
   "Công ty": ["Về chúng tôi", "Tuyển dụng", "Blog", "Báo chí"],
 }
 

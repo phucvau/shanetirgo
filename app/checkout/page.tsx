@@ -131,11 +131,11 @@ export default function CheckoutPage() {
 
   async function handlePlaceOrder() {
     if (!fullName.trim() || !phone.trim() || !cityCode || !districtCode || !wardCode || !street.trim()) {
-      setMessage("Vui long nhap day du thong tin giao hang.");
+      setMessage("Vui lòng nhập đầy đủ thông tin giao hàng.");
       return;
     }
     if (items.length === 0) {
-      setMessage("Gio hang dang trong. Hay them sản phẩm truoc khi thanh toan.");
+      setMessage("Giỏ hàng đang trống. Hay thêm sản phẩm trước khi thanh toán.");
       return;
     }
 
@@ -156,18 +156,18 @@ export default function CheckoutPage() {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
-            Quay lai mua sam
+            Quay lại mua sắm
           </Link>
 
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <Card>
               <CardHeader>
-                <CardTitle className="font-serif text-2xl">Thong tin giao hang</CardTitle>
+                <CardTitle className="font-serif text-2xl">Thông tin giao hàng</CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Ho va ten</Label>
+                    <Label htmlFor="fullName">Họ và tên</Label>
                     <Input
                       id="fullName"
                       value={fullName}
@@ -176,7 +176,7 @@ export default function CheckoutPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">So dien thoai</Label>
+                    <Label htmlFor="phone">Số điện thoại</Label>
                     <Input
                       id="phone"
                       value={phone}
@@ -188,7 +188,7 @@ export default function CheckoutPage() {
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label>Thanh pho</Label>
+                    <Label>Thành phố</Label>
                     <Select
                       value={cityCode}
                       onValueChange={(value) => {
@@ -198,7 +198,7 @@ export default function CheckoutPage() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Chon thanh pho" />
+                        <SelectValue placeholder="Chọn thành phố" />
                       </SelectTrigger>
                       <SelectContent>
                         {cityOptions.map((option) => (
@@ -211,7 +211,7 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Quan/Huyen</Label>
+                    <Label>Quận/Huyện</Label>
                     <Select
                       value={districtCode}
                       onValueChange={(value) => {
@@ -221,7 +221,7 @@ export default function CheckoutPage() {
                       disabled={!cityCode}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Chon quan/huyen" />
+                        <SelectValue placeholder="Chọn quận/huyện" />
                       </SelectTrigger>
                       <SelectContent>
                         {districtOptions.map((option) => (
@@ -234,10 +234,10 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Phuong/Xa</Label>
+                    <Label>Phường/Xã</Label>
                     <Select value={wardCode} onValueChange={setWardCode} disabled={!districtCode}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Chon phuong/xa" />
+                        <SelectValue placeholder="Chọn phường/xã" />
                       </SelectTrigger>
                       <SelectContent>
                         {wardOptions.map((option) => (
@@ -251,7 +251,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="street">Ten duong, so nha</Label>
+                  <Label htmlFor="street">Tên đường, số nhà</Label>
                   <Input
                     id="street"
                     value={street}
@@ -276,12 +276,12 @@ export default function CheckoutPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="font-serif text-2xl">Don hang cua ban</CardTitle>
+                <CardTitle className="font-serif text-2xl">Đơn hàng của bạn</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
                   {items.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Gio hang dang trong.</p>
+                    <p className="text-sm text-muted-foreground">Giỏ hàng đang trống.</p>
                   ) : (
                     items.map((item) => (
                       <div key={item.lineId} className="grid grid-cols-[56px_1fr] gap-3 rounded-lg border border-border p-3">
@@ -294,8 +294,8 @@ export default function CheckoutPage() {
                         </div>
                         <div className="min-w-0 space-y-1">
                           <p className="truncate text-sm font-medium">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">Mau: {item.color || "-"} | Size: {item.size || "-"}</p>
-                          <p className="text-xs text-muted-foreground">So luong: {item.quantity}</p>
+                          <p className="text-xs text-muted-foreground">Màu: {item.color || "-"} | Size: {item.size || "-"}</p>
+                          <p className="text-xs text-muted-foreground">Số lượng: {item.quantity}</p>
                           <p className="text-xs font-semibold">{formatPrice(item.price * item.quantity)}</p>
                         </div>
                       </div>
@@ -305,20 +305,20 @@ export default function CheckoutPage() {
 
                 <div className="space-y-2 border-t border-border pt-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Tong sản phẩm</span>
+                    <span className="text-muted-foreground">Tổng sản phẩm</span>
                     <span className="font-medium">{totalQuantity}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Tam tinh</span>
+                    <span className="text-muted-foreground">Tạm tính</span>
                     <span className="font-semibold">{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Dia chi giao</span>
+                    <span className="text-muted-foreground">Địa chỉ giao</span>
                     <span className="max-w-[65%] text-right text-xs text-muted-foreground">
                       <MapPin className="mr-1 inline h-3.5 w-3.5" />
                       {street && wardName && districtName && cityName
                         ? `${street}, ${wardName}, ${districtName}, ${cityName}`
-                        : "Chua nhap"
+                        : "Chưa nhập"
                       }
                     </span>
                   </div>
@@ -330,7 +330,7 @@ export default function CheckoutPage() {
                   className="w-full bg-black text-white hover:bg-black/90"
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
-                  {placingOrder ? "Dang xu ly..." : "Dat hang / Thanh toan"}
+                  {placingOrder ? "Đang xử lý..." : "Đặt hàng / Thanh toán"}
                 </Button>
               </CardContent>
             </Card>

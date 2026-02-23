@@ -117,18 +117,10 @@ export default function ProductDetailPage() {
                       alt={product.name}
                       className="h-full w-full object-contain"
                     />
-                    {product.isNew ? (
-                      <span className="absolute left-4 top-4 rounded-md bg-orange-600 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white">
-                        Moi
-                      </span>
-                    ) : null}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-6">
-                  <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-                    {product.category}
-                  </p>
                   <h1 className="font-serif text-4xl font-bold text-foreground">{product.name}</h1>
                   <p className="text-2xl font-semibold text-foreground">{formatStorePrice(product.price)}</p>
 
@@ -200,7 +192,6 @@ export default function ProductDetailPage() {
                         >
                           +
                         </button>
-                        <span className="ml-2 text-xs text-muted-foreground">Ton kho: {product.stock}</span>
                       </div>
                     </div>
                   </div>
