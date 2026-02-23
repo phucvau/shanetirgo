@@ -65,6 +65,19 @@ function isCloudinaryConfigured() {
   return Boolean(cloudinaryCloudName && cloudinaryApiKey && cloudinaryApiSecret);
 }
 
+function getCloudinaryErrorMessage(error) {
+  if (!error) return "Unknown error";
+  if (typeof error.message === "string" && error.message.trim()) return error.message;
+  if (error.error && typeof error.error.message === "string" && error.error.message.trim()) {
+    return error.error.message;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch (_) {
+    return "Unknown Cloudinary error";
+  }
+}
+
 function uploadToCloudinary(fileBuffer, originalName) {
   return new Promise((resolve, reject) => {
     const baseName = String(originalName || "image")
@@ -135,6 +148,29 @@ app.get("/health", async (_, res) => {
   }
 });
 
+app.get("/cloudinary-health", async (_, res) => {
+  if (!isCloudinaryConfigured()) {
+    return res.status(500).json({
+      status: "error",
+      message: "Cloudinary is not configured",
+    });
+  }
+
+  try {
+    await cloudinary.api.ping();
+    return res.status(200).json({
+      status: "ok",
+      cloudinaryConfigured: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Cloudinary auth failed",
+      error: getCloudinaryErrorMessage(error),
+    });
+  }
+});
+
 app.get("/products", async (_, res) => {
   try {
     const products = await Product.findAll({
@@ -176,7 +212,10 @@ app.post("/upload-image", upload.single("image"), async (req, res) => {
     return res.status(201).json({ imageUrl: uploaded.secure_url, publicId: uploaded.public_id });
   } catch (error) {
     console.error("Cloudinary upload failed:", error);
-    return res.status(500).json({ message: "Cannot upload image", error: error.message });
+    return res.status(500).json({
+      message: "Cannot upload image",
+      error: getCloudinaryErrorMessage(error),
+    });
   }
 });
 
