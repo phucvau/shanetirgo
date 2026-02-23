@@ -5,7 +5,7 @@ const testimonials = [
     name: "Minh Anh",
     role: "Doanh nhan",
     content:
-      "Chat luong san pham cuc ky tot, toi rat hai long voi tung chi tiet tren ao. Se quay lai mua them!",
+      "Chat luong sản phẩm cuc ky tot, toi rat hai long voi tung chi tiet tren ao. Se quay lai mua them!",
     rating: 5,
   },
   {

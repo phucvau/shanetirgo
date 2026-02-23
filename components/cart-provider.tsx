@@ -63,7 +63,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             lineId,
             productId: Number(item.productId || 0),
             slug: String(item.slug || ""),
-            name: String(item.name || "San pham"),
+            name: String(item.name || "sản phẩm"),
             price: Number(item.price || 0),
             imageUrl: String(item.imageUrl || ""),
             quantity,

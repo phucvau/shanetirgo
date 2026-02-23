@@ -33,7 +33,7 @@ const _nosifer = Nosifer({
 
 export const metadata: Metadata = {
   title: "ShaneTirgo - Thoi Trang Hien Dai",
-  description: "Kham pha bo suu tap thoi trang hien dai, sang trong va tinh te. Thiet ke doc dao, chat lieu cao cap.",
+  description: "Kham pha Bộ sưu tập thoi trang hien dai, sang trong va tinh te. Thiet ke doc dao, chat lieu cao cap.",
 }
 
 export const viewport: Viewport = {

@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch"
 export default function SettingsPage() {
   const [storeName, setStoreName] = useState("LUXE")
   const [storeDescription, setStoreDescription] = useState(
-    "Kham pha bo suu tap thoi trang hien dai, sang trong va tinh te."
+    "Kham pha Bộ sưu tập thoi trang hien dai, sang trong va tinh te."
   )
   const [email, setEmail] = useState("contact@luxe.vn")
   const [phone, setPhone] = useState("0912 345 678")

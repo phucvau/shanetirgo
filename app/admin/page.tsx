@@ -54,7 +54,7 @@ const stats = [
     description: "Khach hang moi",
   },
   {
-    title: "San pham",
+    title: "sản phẩm",
     value: products.length.toString(),
     change: "+2",
     icon: Package,
@@ -150,8 +150,8 @@ export default function AdminDashboard() {
         {/* Top Products */}
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle className="text-base">San pham ban chay</CardTitle>
-            <CardDescription>Top san pham thang nay</CardDescription>
+            <CardTitle className="text-base">sản phẩm ban chay</CardTitle>
+            <CardDescription>Top sản phẩm thang nay</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

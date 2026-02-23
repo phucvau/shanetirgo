@@ -135,7 +135,7 @@ export default function CheckoutPage() {
       return;
     }
     if (items.length === 0) {
-      setMessage("Gio hang dang trong. Hay them san pham truoc khi thanh toan.");
+      setMessage("Gio hang dang trong. Hay them sản phẩm truoc khi thanh toan.");
       return;
     }
 
@@ -305,7 +305,7 @@ export default function CheckoutPage() {
 
                 <div className="space-y-2 border-t border-border pt-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Tong san pham</span>
+                    <span className="text-muted-foreground">Tong sản phẩm</span>
                     <span className="font-medium">{totalQuantity}</span>
                   </div>
                   <div className="flex items-center justify-between">

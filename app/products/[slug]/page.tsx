@@ -35,7 +35,7 @@ export default function ProductDetailPage() {
         const detailResponse = await fetch(`/api/products/${slug}`, { cache: "no-store" });
         const detail = await detailResponse.json();
         if (!detailResponse.ok) {
-          throw new Error(detail?.message || "Khong tim thay san pham.");
+          throw new Error(detail?.message || "Khong tim thay sản phẩm.");
         }
         setProduct(detail);
 
@@ -101,10 +101,10 @@ export default function ProductDetailPage() {
             className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
-            Quay lai danh sach san pham
+            Quay lai danh sach sản phẩm
           </Link>
 
-          {loading ? <p className="py-10 text-muted-foreground">Dang tai chi tiet san pham...</p> : null}
+          {loading ? <p className="py-10 text-muted-foreground">Dang tai chi tiet sản phẩm...</p> : null}
           {error && !product ? <p className="py-10 text-destructive">{error}</p> : null}
 
           {product ? (
@@ -233,7 +233,7 @@ export default function ProductDetailPage() {
               </div>
 
               <div className="rounded-lg border bg-card p-5">
-                <p className="mb-2 text-sm font-medium text-foreground">Mo ta san pham</p>
+                <p className="mb-2 text-sm font-medium text-foreground">Mo ta sản phẩm</p>
                 <p className="text-base leading-7 text-muted-foreground">{product.description}</p>
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function ProductDetailPage() {
         {relatedProducts.length > 0 ? (
           <section className="border-t bg-secondary py-16">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
-              <h2 className="mb-8 font-serif text-3xl font-bold text-foreground">San pham lien quan</h2>
+              <h2 className="mb-8 font-serif text-3xl font-bold text-foreground">sản phẩm lien quan</h2>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {relatedProducts.map((item) => (
                   <Link

@@ -43,7 +43,7 @@ export function ProductsSection() {
         {/* Header */}
         <div className="mb-12 text-center">
           <p className="mb-3 text-sm font-medium uppercase tracking-[0.3em] text-muted-foreground">
-            San pham noi bat
+            sản phẩm noi bat
           </p>
           <h2 className="font-serif text-4xl font-bold text-foreground md:text-5xl text-balance">
             Thiet ke moi nhat
@@ -70,7 +70,7 @@ export function ProductsSection() {
         {/* Product grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {loading ? (
-            <p className="col-span-full text-center text-muted-foreground">Dang tai san pham...</p>
+            <p className="col-span-full text-center text-muted-foreground">Dang tai sản phẩm...</p>
           ) : null}
           {filtered.map((product) => (
             <div key={product.id} className="group">

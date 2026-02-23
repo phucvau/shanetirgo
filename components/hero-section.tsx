@@ -24,13 +24,13 @@ export function HeroSection() {
       <div className="relative z-10 mx-auto max-w-7xl px-6 py-32 lg:px-8">
         <div className="max-w-2xl">
           <p className="mb-4 text-sm font-medium uppercase tracking-[0.3em] text-background/80">
-            Bo suu tap moi 2026
+            Bộ sưu tập moi 2026
           </p>
           <h1 className="font-serif text-5xl font-bold leading-tight text-background md:text-7xl lg:text-8xl">
             <span className="text-balance">Phong cach dinh nghia ban</span>
           </h1>
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-background/80">
-            Kham pha bo suu tap thoi trang hien dai voi thiet ke tinh te, chat lieu cao cap va su sang tao khong gioi han.
+            Kham pha Bộ sưu tập thoi trang hien dai voi thiet ke tinh te, chat lieu cao cap va su sang tao khong gioi han.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
@@ -44,7 +44,7 @@ export function HeroSection() {
               href="#collections"
               className="inline-flex items-center gap-2 border border-background/50 px-8 py-4 text-sm font-medium uppercase tracking-wider text-background transition-all hover:border-background hover:bg-background/10"
             >
-              Xem bo suu tap
+              Xem Bộ sưu tập
             </Link>
           </div>
         </div>

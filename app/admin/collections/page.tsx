@@ -79,14 +79,14 @@ export default function CollectionsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground">Bo suu tap</h1>
+          <h1 className="font-serif text-2xl font-bold text-foreground">Bộ sưu tập</h1>
           <p className="text-sm text-muted-foreground">
-            Quan ly bo suu tap cua hang ({collectionList.length} bo suu tap)
+            Quan ly Bộ sưu tập cua hang ({collectionList.length} Bộ sưu tập)
           </p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="mr-2 size-4" />
-          Them bo suu tap
+          Them Bộ sưu tập
         </Button>
       </div>
 
@@ -116,7 +116,7 @@ export default function CollectionsPage() {
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <FolderOpen className="size-3" />
-                  {col.productCount} san pham
+                  {col.productCount} sản phẩm
                 </span>
                 <div className="flex gap-1">
                   <Button
@@ -152,22 +152,22 @@ export default function CollectionsPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-serif">
-              {editing ? "Chinh sua bo suu tap" : "Them bo suu tap moi"}
+              {editing ? "Chinh sua Bộ sưu tập" : "Them Bộ sưu tập moi"}
             </DialogTitle>
             <DialogDescription>
               {editing
-                ? "Cap nhat thong tin bo suu tap."
-                : "Tao bo suu tap moi cho cua hang."}
+                ? "Cap nhat thong tin Bộ sưu tập."
+                : "Tao Bộ sưu tập moi cho cua hang."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">Ten bo suu tap</Label>
+              <Label htmlFor="title">Ten Bộ sưu tập</Label>
               <Input
                 id="title"
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
-                placeholder="Nhap ten bo suu tap"
+                placeholder="Nhap ten Bộ sưu tập"
               />
             </div>
             <div className="grid gap-2">
@@ -176,7 +176,7 @@ export default function CollectionsPage() {
                 id="desc"
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="Mo ta bo suu tap..."
+                placeholder="Mo ta Bộ sưu tập..."
                 rows={3}
               />
             </div>
@@ -205,7 +205,7 @@ export default function CollectionsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="font-serif">Xoa bo suu tap</DialogTitle>
+            <DialogTitle className="font-serif">Xoa Bộ sưu tập</DialogTitle>
             <DialogDescription>
               Ban co chac chan muon xoa &quot;{toDelete?.title}&quot;? Hanh dong nay khong the hoan tac.
             </DialogDescription>

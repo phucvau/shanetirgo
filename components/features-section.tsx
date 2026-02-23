@@ -14,7 +14,7 @@ const features = [
   {
     icon: Shield,
     title: "Chat luong dam bao",
-    description: "San pham chinh hang, chat lieu cao cap.",
+    description: "sản phẩm chinh hang, chat lieu cao cap.",
   },
   {
     icon: Headphones,

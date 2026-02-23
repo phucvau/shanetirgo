@@ -119,7 +119,7 @@ export default function OrdersPage() {
                 <TableHead>Ma don</TableHead>
                 <TableHead>Khach hang</TableHead>
                 <TableHead>Ngay dat</TableHead>
-                <TableHead>San pham</TableHead>
+                <TableHead>sản phẩm</TableHead>
                 <TableHead>Trang thai</TableHead>
                 <TableHead className="text-right">Tong tien</TableHead>
                 <TableHead className="w-[60px]" />
@@ -139,7 +139,7 @@ export default function OrdersPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">{order.date}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {order.items.length} san pham
+                      {order.items.length} sản phẩm
                     </TableCell>
                     <TableCell>
                       <Badge variant={status.variant}>{status.label}</Badge>
@@ -218,7 +218,7 @@ export default function OrdersPage() {
                 </div>
                 <Separator />
                 <div>
-                  <p className="mb-2 text-sm font-medium">San pham</p>
+                  <p className="mb-2 text-sm font-medium">sản phẩm</p>
                   <div className="space-y-2">
                     {detailOrder.items.map((item, i) => (
                       <div key={i} className="flex items-center justify-between text-sm">

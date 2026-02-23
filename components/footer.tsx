@@ -1,9 +1,9 @@
 import Link from "next/link"
 
 const footerLinks = {
-  "San pham": ["Ao", "Quan", "Vay", "Phu kien", "Bo suu tap moi"],
+  "sản phẩm": ["Ao", "Quan", "Vay", "Phu kien", "Bộ sưu tập moi"],
   "Ho tro": ["Huong dan mua hang", "Chinh sach doi tra", "Van chuyen", "Lien he"],
-  "Cong ty": ["Ve chung toi", "Tuyen dung", "Blog", "Bao chi"],
+  "Cong ty": ["Về chúng tôi", "Tuyen dung", "Blog", "Bao chi"],
 }
 
 export function Footer() {

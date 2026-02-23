@@ -7,10 +7,10 @@ import { Menu, X, ShoppingBag, Search, User } from "lucide-react"
 import { useCart } from "@/components/cart-provider"
 
 const navLinks = [
-  { label: "Trang chu", href: "#" },
-  { label: "Bo suu tap", href: "#collections" },
-  { label: "San pham", href: "#products" },
-  { label: "Ve chung toi", href: "#about" },
+  { label: "Trang chủ", href: "#" },
+  { label: "Bộ sưu tập", href: "#collections" },
+  { label: "sản phẩm", href: "#products" },
+  { label: "Về chúng tôi", href: "#about" },
 ]
 
 export function Navbar() {
@@ -124,7 +124,7 @@ export function Navbar() {
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Gio hang</p>
-              <h3 className="text-lg font-semibold text-foreground">{totalQuantity} san pham</h3>
+              <h3 className="text-lg font-semibold text-foreground">{totalQuantity} sản phẩm</h3>
             </div>
             <button
               onClick={() => setCartOpen(false)}
@@ -137,7 +137,7 @@ export function Navbar() {
 
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {items.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Chua co san pham trong gio hang.</p>
+              <p className="text-sm text-muted-foreground">Chua co sản phẩm trong gio hang.</p>
             ) : (
               items.map((item) => (
                 <div key={item.lineId} className="grid min-h-[96px] grid-cols-[64px_1fr_auto] items-stretch gap-3 rounded-lg border border-border p-3">
@@ -162,7 +162,7 @@ export function Navbar() {
                     <button
                       onClick={() => removeItem(item.lineId)}
                       className="rounded-md p-1 text-red-600 hover:bg-red-50"
-                      aria-label="Xoa san pham"
+                      aria-label="Xoa sản phẩm"
                     >
                       <X className="h-4 w-4" />
                     </button>

@@ -36,10 +36,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 const navMain = [
   { title: "Tong quan", href: "/admin", icon: LayoutDashboard },
-  { title: "San pham", href: "/admin/products", icon: Package },
+  { title: "sản phẩm", href: "/admin/products", icon: Package },
   { title: "Don hang", href: "/admin/orders", icon: ShoppingCart },
   { title: "Khach hang", href: "/admin/customers", icon: Users },
-  { title: "Bo suu tap", href: "/admin/collections", icon: FolderOpen },
+  { title: "Bộ sưu tập", href: "/admin/collections", icon: FolderOpen },
   { title: "Cai dat", href: "/admin/settings", icon: Settings },
 ]
 

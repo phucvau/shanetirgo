@@ -86,7 +86,7 @@ export default function ProductsPage() {
       const response = await fetch(`${PRODUCT_API_BASE}/products`, { cache: "no-store" });
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result?.message || "Khong the tai danh sach san pham.");
+        throw new Error(result?.message || "Khong the tai danh sach sản phẩm.");
       }
       setProductList(result);
     } catch (error) {
@@ -171,7 +171,7 @@ export default function ProductsPage() {
       });
       const createResult = await createResponse.json();
       if (!createResponse.ok) {
-        throw new Error(createResult?.message || "Tao san pham that bai.");
+        throw new Error(createResult?.message || "Tao sản phẩm that bai.");
       }
 
       setDialogOpen(false);
@@ -191,7 +191,7 @@ export default function ProductsPage() {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(result?.message || "Xoa san pham that bai.");
+        throw new Error(result?.message || "Xoa sản phẩm that bai.");
       }
       setProductList((prev) => prev.filter((item) => item.id !== productId));
     } catch (error) {
@@ -203,14 +203,14 @@ export default function ProductsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground">San pham</h1>
+          <h1 className="font-serif text-2xl font-bold text-foreground">sản phẩm</h1>
           <p className="text-sm text-muted-foreground">
-            Danh sach san pham tu API ({productList.length} san pham)
+            Danh sach sản phẩm tu API ({productList.length} sản phẩm)
           </p>
         </div>
         <Button onClick={openCreateDialog}>
           <Plus className="mr-2 size-4" />
-          Them san pham
+          Them sản phẩm
         </Button>
       </div>
 
@@ -220,7 +220,7 @@ export default function ProductsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Tim kiem san pham..."
+                placeholder="Tim kiem sản phẩm..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -271,7 +271,7 @@ export default function ProductsPage() {
               ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                    Khong tim thay san pham nao.
+                    Khong tim thay sản phẩm nao.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -320,7 +320,7 @@ export default function ProductsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-serif">Them san pham moi</DialogTitle>
+            <DialogTitle className="font-serif">Them sản phẩm moi</DialogTitle>
             <DialogDescription>
               Du lieu se duoc luu vao MySQL qua API `http://localhost:4001/products`.
             </DialogDescription>
@@ -328,7 +328,7 @@ export default function ProductsPage() {
 
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Ten san pham</Label>
+              <Label htmlFor="name">Ten sản phẩm</Label>
               <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} />
             </div>
 
@@ -435,7 +435,7 @@ export default function ProductsPage() {
             </Button>
             <Button onClick={handleSave} disabled={submitting}>
               <Upload className="mr-2 size-4" />
-              {submitting ? "Dang luu..." : "Tao san pham"}
+              {submitting ? "Dang luu..." : "Tao sản phẩm"}
             </Button>
           </DialogFooter>
         </DialogContent>

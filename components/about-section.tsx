@@ -8,7 +8,7 @@ export function AboutSection() {
         <div className="relative aspect-[4/5] overflow-hidden">
           <Image
             src="/images/collection-1.jpg"
-            alt="Ve chung toi"
+            alt="Về chúng tôi"
             fill
             className="object-cover"
           />
@@ -27,7 +27,7 @@ export function AboutSection() {
               ShaneTirgo ra doi tu niem dam me bat tan voi thoi trang va su khat khao mang den nhung thiet ke doc dao, tinh te cho nguoi Viet.
             </p>
             <p>
-              Moi san pham deu duoc che tac tu nhung chat lieu cao cap nhat, voi su chu y den tung chi tiet nho nhat. Chung toi tin rang thoi trang khong chi la quan ao ma la cach ban the hien chinh minh.
+              Moi sản phẩm deu duoc che tac tu nhung chat lieu cao cap nhat, voi su chu y den tung chi tiet nho nhat. Chung toi tin rang thoi trang khong chi la quan ao ma la cach ban the hien chinh minh.
             </p>
           </div>
 

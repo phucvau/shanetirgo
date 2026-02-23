@@ -29,7 +29,7 @@ export function CollectionsSection() {
       {/* Header */}
       <div className="mb-16 text-center">
         <p className="mb-3 text-sm font-medium uppercase tracking-[0.3em] text-muted-foreground">
-          Bo suu tap
+          Bộ sưu tập
         </p>
         <h2 className="font-serif text-4xl font-bold text-foreground md:text-5xl text-balance">
           Duoc tuyen chon dac biet cho ban

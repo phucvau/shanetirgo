@@ -25,7 +25,7 @@ export function NewsletterSection() {
           Nhan uu dai doc quyen
         </h2>
         <p className="mt-4 text-base leading-relaxed text-background/70">
-          Dang ky de nhan thong tin ve bo suu tap moi va cac chuong trinh uu dai dac biet tu ShaneTirgo.
+          Dang ky de nhan thong tin ve Bộ sưu tập moi va cac chuong trinh uu dai dac biet tu ShaneTirgo.
         </p>
 
         {submitted ? (

@@ -32,7 +32,7 @@ export default function CheckoutSuccessPage() {
                 <Button asChild className="bg-black text-white hover:bg-black/90">
                   <Link href="/#products">
                     <ShoppingBag className="mr-2 h-4 w-4" />
-                    Xem san pham
+                    Xem sản phẩm
                   </Link>
                 </Button>
               </div>
