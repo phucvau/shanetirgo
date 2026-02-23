@@ -7,13 +7,16 @@ export function HeroSection() {
     <section className="relative flex min-h-screen items-center overflow-hidden">
       {/* Background image */}
       <div className="absolute inset-0">
-        <Image
-          src="/images/herosection.jpg"
-          alt="Thoi trang hien dai"
-          fill
-          className="object-cover"
-          priority
-        />
+         <video
+    className="h-full w-full object-cover"
+    autoPlay
+    muted
+    loop
+    playsInline
+    preload="auto"
+  >
+    <source src="/videos/hero.mp4" type="video/mp4" />
+  </video>
         <div className="absolute inset-0 bg-foreground/40" />
       </div>
 
