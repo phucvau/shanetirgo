@@ -543,7 +543,7 @@ export default function ProductsListingPage() {
                   const effectivePrice = getEffectiveProductPrice(product);
 
                   return (
-                    <div key={product.id} className="group overflow-hidden rounded-xl border bg-card shadow-[0_8px_20px_rgba(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(0,0,0,0.14)]">
+                    <div key={product.id} className="group flex h-full flex-col overflow-hidden rounded-xl border bg-card shadow-[0_8px_20px_rgba(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(0,0,0,0.14)]">
                       <div className="relative aspect-[4/5] overflow-hidden bg-muted">
                         <Link href={`/products/${product.slug}`} className="absolute inset-0 z-10">
                           <span className="sr-only">Xem {product.name}</span>
@@ -556,8 +556,8 @@ export default function ProductsListingPage() {
                         {renderTag(product)}
                       </div>
 
-                      <div className="bg-[#eceff1] px-4 py-4 text-center">
-                        <Link href={`/products/${product.slug}`} className="font-serif text-base font-bold tracking-wide text-foreground hover:text-accent">
+                      <div className="flex min-h-[96px] flex-1 flex-col justify-center bg-[#eceff1] px-4 py-4 text-center">
+                        <Link href={`/products/${product.slug}`} className="line-clamp-2 min-h-[3rem] font-serif text-base font-bold tracking-wide text-foreground hover:text-accent">
                           {product.name}
                         </Link>
                         <p className="mt-1 text-sm font-semibold text-foreground">

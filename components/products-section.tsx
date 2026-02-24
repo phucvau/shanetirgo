@@ -141,7 +141,7 @@ export function ProductsSection() {
             <p className="col-span-full text-center text-muted-foreground">Đang tải sản phẩm...</p>
           ) : null}
           {pagedProducts.map((product) => (
-            <div key={product.id} className="group w-full overflow-hidden rounded-xl bg-card shadow-[0_10px_25px_rgba(0,0,0,0.12)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(0,0,0,0.16)]">
+            <div key={product.id} className="group flex h-full w-full flex-col overflow-hidden rounded-xl bg-card shadow-[0_10px_25px_rgba(0,0,0,0.12)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(0,0,0,0.16)]">
               {/* Image wrapper */}
               <div
                 className="relative aspect-[4/5] overflow-hidden bg-muted"
@@ -181,10 +181,10 @@ export function ProductsSection() {
                 {renderStatusTag(product)}
               </div>
               {/* Info */}
-              <div className="bg-[#eceff1] px-4 py-4 text-center">
+              <div className="flex min-h-[96px] flex-1 flex-col justify-center bg-[#eceff1] px-4 py-4 text-center">
                 <Link
                   href={`/products/${product.slug}`}
-                  className="font-serif text-base font-bold tracking-wide text-foreground hover:text-accent"
+                  className="line-clamp-2 min-h-[3rem] font-serif text-base font-bold tracking-wide text-foreground hover:text-accent"
                 >
                   {product.name}
                 </Link>
