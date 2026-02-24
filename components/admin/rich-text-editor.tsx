@@ -84,6 +84,20 @@ export function RichTextEditor({ value, onChange, onUploadImage }: Props) {
     onChange(editorRef.current?.innerHTML || "");
   }
 
+  function setImageAlign(align: "left" | "center" | "right") {
+    if (!selectedImage) return;
+    selectedImage.style.display = "block";
+    selectedImage.style.float = "none";
+    if (align === "center") {
+      selectedImage.style.margin = "0.8rem auto";
+    } else if (align === "right") {
+      selectedImage.style.margin = "0.8rem 0 0.8rem auto";
+    } else {
+      selectedImage.style.margin = "0.8rem auto 0.8rem 0";
+    }
+    onChange(editorRef.current?.innerHTML || "");
+  }
+
   const toolButtons = useMemo(
     () => [
       { label: "H1", icon: Heading1, action: () => runCommand("formatBlock", "<h1>") },
@@ -158,12 +172,13 @@ export function RichTextEditor({ value, onChange, onUploadImage }: Props) {
           accept="image/*"
           className="hidden"
           onChange={async (e) => {
+            const input = e.currentTarget;
             const file = e.target.files?.[0];
             if (!file) return;
             try {
               await handleInsertImage(file);
             } finally {
-              e.currentTarget.value = "";
+              input.value = "";
             }
           }}
         />
@@ -188,6 +203,17 @@ export function RichTextEditor({ value, onChange, onUploadImage }: Props) {
                 {percent}%
               </Button>
             ))}
+          </div>
+          <div className="flex gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={() => setImageAlign("left")}>
+              <AlignLeft className="mr-1 h-4 w-4" /> Trái
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setImageAlign("center")}>
+              <AlignCenter className="mr-1 h-4 w-4" /> Giữa
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setImageAlign("right")}>
+              <AlignRight className="mr-1 h-4 w-4" /> Phải
+            </Button>
           </div>
         </div>
       ) : null}

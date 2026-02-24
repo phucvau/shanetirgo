@@ -12,9 +12,11 @@ Project này được tổ chức theo hướng e-commerce production baseline v
 
 ## Architecture
 
-- `web` (Next.js): frontend + API proxy (`/api/products`, `/api/orders`)
+- `web` (Next.js): frontend + API proxy (`/api/products`, `/api/orders`, `/api/categories`, `/api/collections`)
 - `product-service`: quản lý truy vấn sản phẩm từ MySQL
 - `order-service`: quản lý đơn hàng từ MySQL
+- `category-service`: quản lý danh mục
+- `collection-service`: quản lý bộ sưu tập
 - `mysql`: database trung tâm
 
 ## Run Local bằng Docker
@@ -37,6 +39,8 @@ Services:
 - Web: `http://localhost:3000`
 - Product service: `http://localhost:4001/health`
 - Order service: `http://localhost:4002/health`
+- Category service: `http://localhost:4003/health`
+- Collection service: `http://localhost:4004/health`
 - MySQL: `localhost:3307`
 
 Test API qua Next.js:
@@ -58,9 +62,15 @@ npm run dev
 
 Copy env:
 
-```bash
-cp .env.example .env.local
-```
+Server-side env khuyen dung cho web (Vercel/production):
+- `PRODUCT_SERVICE_URL`
+- `ORDER_SERVICE_URL`
+- `CATEGORY_SERVICE_URL`
+- `COLLECTION_SERVICE_URL`
+
+Luu y:
+- Khong dung `NEXT_PUBLIC_PRODUCT_API_URL` nua.
+- Frontend va admin deu goi qua Next API `/api/*`.
 
 ## CI/CD
 

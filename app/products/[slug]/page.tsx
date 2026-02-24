@@ -16,6 +16,13 @@ import {
   parseSizes,
   parseVariantStocks,
 } from "@/lib/storefront-products";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export default function ProductDetailPage() {
   const router = useRouter();
@@ -92,8 +99,7 @@ export default function ProductDetailPage() {
         const list = await listResponse.json();
         if (listResponse.ok) {
           const related = (list as ApiProduct[])
-            .filter((item) => item.category === detail.category && item.slug !== detail.slug)
-            .slice(0, 3);
+            .filter((item) => item.category === detail.category && item.slug !== detail.slug);
           setRelatedProducts(related);
         }
       } catch (err) {
@@ -400,29 +406,36 @@ export default function ProductDetailPage() {
         {relatedProducts.length > 0 ? (
           <section className="border-t bg-secondary py-16">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
-              <h2 className="mb-8 font-serif text-3xl font-bold text-foreground">sản phẩm lien quan</h2>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {relatedProducts.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/products/${item.slug}`}
-                    className="group overflow-hidden rounded-lg border bg-card"
-                  >
-                    <div className="relative aspect-[5/5] overflow-hidden">
-                      <img
-                        src={getProductImages(item)[0]}
-                        alt={item.name}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="space-y-1 p-4">
-                      <p className="text-sm uppercase tracking-wider text-muted-foreground">{item.category}</p>
-                      <h3 className="font-medium text-foreground">{item.name}</h3>
-                      <p className="text-sm font-semibold text-muted-foreground">{formatStorePrice(item.price)}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <h2 className="mb-8 font-serif text-3xl font-bold text-foreground">Sản phẩm liên quan khác</h2>
+              <Carousel opts={{ align: "start" }} className="px-2 md:px-4">
+                <CarouselContent>
+                  {relatedProducts.map((item) => (
+                    <CarouselItem key={item.id} className="basis-full sm:basis-1/2 lg:basis-1/4">
+                      <Link
+                        href={`/products/${item.slug}`}
+                        className="group block overflow-hidden rounded-lg border bg-card"
+                      >
+                        <div className="relative aspect-[5/5] overflow-hidden">
+                          <img
+                            src={getProductImages(item)[0]}
+                            alt={item.name}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </div>
+                        <div className="space-y-1 p-4">
+                          <p className="text-sm uppercase tracking-wider text-muted-foreground">{item.category}</p>
+                          <h3 className="font-medium text-foreground">{item.name}</h3>
+                          <p className="text-sm font-semibold text-muted-foreground">
+                            {formatStorePrice(getEffectiveProductPrice(item))}
+                          </p>
+                        </div>
+                      </Link>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="-left-2 md:-left-5" />
+                <CarouselNext className="-right-2 md:-right-5" />
+              </Carousel>
             </div>
           </section>
         ) : null}

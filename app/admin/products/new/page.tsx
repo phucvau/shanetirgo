@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Plus, Upload } from "lucide-react";
+import { ChevronLeft, Plus, Upload, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -191,6 +191,17 @@ export default function NewProductPage() {
     setCustomSize("");
   }
 
+  function removeImageAt(index: number) {
+    setImageFiles((prev) => prev.filter((_, idx) => idx !== index));
+    setImagePreviews((prev) => {
+      const removed = prev[index];
+      if (removed?.startsWith("blob:")) {
+        URL.revokeObjectURL(removed);
+      }
+      return prev.filter((_, idx) => idx !== index);
+    });
+  }
+
   async function handleCreate() {
     if (!name.trim() || !price.trim() || !material.trim() || !category || !description.trim()) {
       setMessage("Vui lòng nhập đầy đủ thông tin cơ bản.");
@@ -367,6 +378,9 @@ export default function NewProductPage() {
               multiple
               onChange={(e) => {
                 const files = Array.from(e.target.files || []);
+                imagePreviews.forEach((src) => {
+                  if (src.startsWith("blob:")) URL.revokeObjectURL(src);
+                });
                 setImageFiles(files);
                 setImagePreviews(files.map((file) => URL.createObjectURL(file)));
               }}
@@ -374,7 +388,15 @@ export default function NewProductPage() {
             {imagePreviews.length > 0 ? (
               <div className="grid grid-cols-2 gap-3">
                 {imagePreviews.map((src, index) => (
-                  <div key={`${src}-${index}`} className="overflow-hidden rounded-lg border">
+                  <div key={`${src}-${index}`} className="relative overflow-hidden rounded-lg border">
+                    <button
+                      type="button"
+                      onClick={() => removeImageAt(index)}
+                      className="absolute right-2 top-2 z-10 rounded-full bg-red-600 p-1 text-white shadow hover:bg-red-700"
+                      aria-label={`Xóa ảnh ${index + 1}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                     <img src={src} alt={`preview-${index + 1}`} className="h-40 w-full object-cover" />
                   </div>
                 ))}
