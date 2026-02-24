@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   ArrowDownWideNarrow,
   ArrowUpWideNarrow,
@@ -102,7 +101,6 @@ function getProductMeta(product: ApiProduct) {
 }
 
 export default function ProductsListingPage() {
-  const searchParams = useSearchParams();
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [collections, setCollections] = useState<CollectionItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -174,10 +172,11 @@ export default function ProductsListingPage() {
   }, []);
 
   useEffect(() => {
-    const slug = String(searchParams.get("collection") || "").trim();
+    if (typeof window === "undefined") return;
+    const slug = String(new URLSearchParams(window.location.search).get("collection") || "").trim();
     if (!slug) return;
     setSelectedCollection(slug);
-  }, [searchParams]);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
