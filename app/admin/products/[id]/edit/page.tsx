@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 
-const PRODUCT_API_BASE = process.env.NEXT_PUBLIC_PRODUCT_API_URL || "http://localhost:4001";
 const defaultSizes = ["XS", "S", "M", "L", "XL", "XXL"];
 const defaultColors = ["Đen", "Trắng", "Xám", "Be", "Nâu", "Xanh", "Đỏ"];
 const statusOptions = ["normal", "new", "hot", "sale"] as const;
@@ -129,7 +128,7 @@ export default function EditProductPage() {
       setLoadingProduct(true);
       setMessage("");
       try {
-        const response = await fetch(`${PRODUCT_API_BASE}/products/id/${productId}`, { cache: "no-store" });
+        const response = await fetch(`/api/products/id/${productId}`, { cache: "no-store" });
         const result: ProductResponse = await response.json();
         if (!response.ok) {
           throw new Error((result as { message?: string })?.message || "Không thể tải sản phẩm.");
@@ -191,7 +190,7 @@ export default function EditProductPage() {
     const imageData = new FormData();
     imageData.append("image", file);
 
-    const uploadResponse = await fetch(`${PRODUCT_API_BASE}/upload-image`, {
+    const uploadResponse = await fetch(`/api/upload-image`, {
       method: "POST",
       body: imageData,
     });
@@ -312,7 +311,7 @@ export default function EditProductPage() {
         variantStocks: isAccessory ? [] : variants,
       };
 
-      const response = await fetch(`${PRODUCT_API_BASE}/products/${productId}`, {
+      const response = await fetch(`/api/products/${productId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

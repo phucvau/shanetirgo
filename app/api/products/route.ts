@@ -24,3 +24,21 @@ export async function GET() {
     );
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const response = await fetch(`${serviceUrl}/products`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const result = await response.json();
+    return NextResponse.json(result, { status: response.status });
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Cannot create product", error: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}

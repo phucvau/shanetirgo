@@ -25,8 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const PRODUCT_API_BASE = process.env.NEXT_PUBLIC_PRODUCT_API_URL || "http://localhost:4001";
-
 type CollectionItem = {
   id: number;
   name: string;
@@ -163,7 +161,7 @@ export default function CollectionsPage() {
     setUploading(true);
     setMessage("");
     try {
-      const uploadResponse = await fetch(`${PRODUCT_API_BASE}/upload-image`, {
+      const uploadResponse = await fetch(`/api/upload-image`, {
         method: "POST",
         body: imageData,
       });

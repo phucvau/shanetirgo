@@ -23,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const PRODUCT_API_BASE = process.env.NEXT_PUBLIC_PRODUCT_API_URL || "http://localhost:4001";
 const statusOptions = ["normal", "new", "hot", "sale"] as const;
 
 type ProductStatus = (typeof statusOptions)[number];
@@ -111,7 +110,7 @@ export default function ProductsPage() {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch(`${PRODUCT_API_BASE}/products`, { cache: "no-store" });
+      const response = await fetch(`/api/products`, { cache: "no-store" });
       const result = await response.json();
       if (!response.ok) {
         throw new Error(result?.message || "Không thể tải danh sách sản phẩm.");
@@ -175,7 +174,7 @@ export default function ProductsPage() {
   async function handleDelete(productId: number) {
     setMessage("");
     try {
-      const response = await fetch(`${PRODUCT_API_BASE}/products/${productId}`, {
+      const response = await fetch(`/api/products/${productId}`, {
         method: "DELETE",
       });
       const result = await response.json().catch(() => ({}));
@@ -191,7 +190,7 @@ export default function ProductsPage() {
   async function handleQuickStatusUpdate(product: Product, nextStatus: ProductStatus) {
     setMessage("");
     try {
-      const response = await fetch(`${PRODUCT_API_BASE}/products/${product.id}/status`, {
+      const response = await fetch(`/api/products/${product.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
