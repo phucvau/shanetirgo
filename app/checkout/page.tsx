@@ -304,7 +304,6 @@ export default function CheckoutPage() {
                     id="note"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao..."
                     rows={3}
                   />
                 </div>

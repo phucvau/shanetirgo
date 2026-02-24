@@ -105,6 +105,8 @@ export default function ProductsListingPage() {
   const [collections, setCollections] = useState<CollectionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
+  const [hoverImageIndex, setHoverImageIndex] = useState<Record<string, number>>({});
 
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -303,6 +305,14 @@ export default function ProductsListingPage() {
     return filtered.slice(start, start + itemsPerPage);
   }, [filtered, currentPage, itemsPerPage]);
 
+  const productImageMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    pagedProducts.forEach((product) => {
+      map.set(product.slug, getProductImages(product));
+    });
+    return map;
+  }, [pagedProducts]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -321,6 +331,22 @@ export default function ProductsListingPage() {
       setCurrentPage(totalPages);
     }
   }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    if (!hoveredSlug) return;
+    const images = productImageMap.get(hoveredSlug) || [];
+    if (images.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setHoverImageIndex((prev) => {
+        const current = prev[hoveredSlug] ?? 0;
+        const next = current >= images.length - 1 ? 0 : current + 1;
+        return { ...prev, [hoveredSlug]: next };
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [hoveredSlug, productImageMap]);
 
   function toggleInArray(value: string, list: string[], setter: (next: string[]) => void) {
     if (list.includes(value)) {
@@ -539,20 +565,43 @@ export default function ProductsListingPage() {
 
                 {pagedProducts.map((product) => {
                   const status = normalizeStatus(product.productStatus);
-                  const images = getProductImages(product);
                   const effectivePrice = getEffectiveProductPrice(product);
 
                   return (
-                    <div key={product.id} className="group flex h-full flex-col overflow-hidden rounded-xl border bg-card shadow-[0_8px_20px_rgba(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(0,0,0,0.14)]">
-                      <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+                    <div key={product.id} className="group flex h-full flex-col overflow-hidden rounded-xl border bg-[#eceff1] shadow-[0_8px_20px_rgba(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(0,0,0,0.14)]">
+                      <div
+                        className="relative aspect-[4/5] overflow-hidden bg-muted"
+                        onMouseEnter={() => {
+                          const images = productImageMap.get(product.slug) || [];
+                          if (images.length > 1) {
+                            setHoveredSlug(product.slug);
+                            setHoverImageIndex((prev) => ({ ...prev, [product.slug]: 1 }));
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          setHoveredSlug((prev) => (prev === product.slug ? null : prev));
+                          setHoverImageIndex((prev) => ({ ...prev, [product.slug]: 0 }));
+                        }}
+                      >
                         <Link href={`/products/${product.slug}`} className="absolute inset-0 z-10">
                           <span className="sr-only">Xem {product.name}</span>
                         </Link>
-                        <img
-                          src={images[0]}
-                          alt={product.name}
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                        />
+                        <div
+                          className="flex h-full w-full transition-transform duration-1000 ease-in-out"
+                          style={{
+                            transform: `translateX(-${(hoverImageIndex[product.slug] ?? 0) * 100}%)`,
+                          }}
+                        >
+                          {(productImageMap.get(product.slug) || ["/images/product-1.jpeg"]).map((imageUrl, index) => (
+                            <div key={`${product.slug}-${index}`} className="h-full w-full shrink-0">
+                              <img
+                                src={imageUrl}
+                                alt={`${product.name}-${index + 1}`}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
                         {renderTag(product)}
                       </div>
 
