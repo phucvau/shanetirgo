@@ -22,6 +22,11 @@ function defineProductModel(sequelize) {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
       },
+      salePrice: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+        field: "sale_price",
+      },
       stock: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -52,10 +57,28 @@ function defineProductModel(sequelize) {
         allowNull: false,
         defaultValue: "",
       },
+      variantStocks: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: "[]",
+        field: "variant_stocks",
+      },
       imageUrl: {
         type: DataTypes.STRING(500),
         allowNull: true,
         field: "image_url",
+      },
+      imageUrls: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: "[]",
+        field: "image_urls",
+      },
+      productStatus: {
+        type: DataTypes.STRING(30),
+        allowNull: false,
+        defaultValue: "new",
+        field: "product_status",
       },
       isNew: {
         type: DataTypes.BOOLEAN,

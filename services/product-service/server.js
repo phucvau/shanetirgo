@@ -60,6 +60,7 @@ const sequelize = new Sequelize(mysqlDatabase, mysqlUser, mysqlPassword, {
 });
 
 const Product = defineProductModel(sequelize);
+const allowedProductStatuses = ["normal", "new", "hot", "sale"];
 
 function isCloudinaryConfigured() {
   return Boolean(cloudinaryCloudName && cloudinaryApiKey && cloudinaryApiSecret);
@@ -135,6 +136,156 @@ function slugify(value) {
     .replace(/(^-|-$)/g, "");
 }
 
+function parseJsonArray(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function normalizeProduct(product) {
+  const data = product.toJSON();
+  const parsedImages = parseJsonArray(data.imageUrls).filter(Boolean).map((item) => String(item));
+  const parsedVariants = parseJsonArray(data.variantStocks);
+  const imageUrls = parsedImages.length > 0 ? parsedImages : data.imageUrl ? [String(data.imageUrl)] : [];
+  const fallbackStatus = data.isNew ? "new" : "normal";
+  const status = allowedProductStatuses.includes(String(data.productStatus || ""))
+    ? String(data.productStatus)
+    : fallbackStatus;
+  const salePrice = data.salePrice === null || data.salePrice === undefined ? null : Number(data.salePrice);
+  return {
+    ...data,
+    imageUrl: imageUrls[0] || data.imageUrl || "",
+    imageUrls,
+    variantStocks: parsedVariants,
+    productStatus: status,
+    salePrice: Number.isFinite(salePrice) ? salePrice : null,
+    description: String(data.description || ""),
+  };
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function isAccessoryCategory(category) {
+  const normalized = normalizeText(category);
+  return normalized.includes("phu kien");
+}
+
+function buildProductPayload(rawInput, currentProduct) {
+  const input = rawInput || {};
+  const name = input.name ?? currentProduct?.name;
+  const price = input.price ?? currentProduct?.price;
+  const stock = input.stock ?? currentProduct?.stock;
+  const size = input.size ?? currentProduct?.size;
+  const material = input.material ?? currentProduct?.material;
+  const category = input.category ?? currentProduct?.category;
+  const description = input.description ?? currentProduct?.description;
+  const colors = input.colors ?? currentProduct?.colors;
+  const imageUrl = input.imageUrl ?? currentProduct?.imageUrl;
+  const imageUrls = input.imageUrls ?? currentProduct?.imageUrls;
+  const variantStocks = input.variantStocks ?? currentProduct?.variantStocks;
+  const isNew = input.isNew ?? currentProduct?.isNew;
+  const salePriceInput = input.salePrice ?? currentProduct?.salePrice;
+
+  const statusInput = String(input.productStatus || "").trim().toLowerCase();
+  const legacyStatus = typeof isNew === "boolean" ? (isNew ? "new" : "normal") : "normal";
+  const productStatus = allowedProductStatuses.includes(statusInput)
+    ? statusInput
+    : currentProduct?.productStatus && allowedProductStatuses.includes(String(currentProduct.productStatus))
+      ? String(currentProduct.productStatus)
+      : legacyStatus;
+
+  const isAccessory = isAccessoryCategory(category);
+  const normalizedVariants = Array.isArray(variantStocks)
+    ? variantStocks
+        .map((item) => ({
+          size: String(item?.size || "").trim(),
+          color: String(item?.color || "").trim(),
+          stock: Number(item?.stock || 0),
+        }))
+        .filter((item) => item.stock >= 0 && (item.size || item.color))
+    : [];
+
+  const hasInvalidVariant = normalizedVariants.some((item) => !Number.isFinite(item.stock) || item.stock < 0);
+  if (hasInvalidVariant) {
+    return { error: "variantStocks is invalid" };
+  }
+
+  if (!isAccessory && normalizedVariants.length === 0) {
+    return { error: "San pham quan ao phai co it nhat 1 bien the (size, mau, ton kho)" };
+  }
+  if (!isAccessory && normalizedVariants.some((item) => !item.size || !item.color)) {
+    return { error: "San pham quan ao yeu cau size va mau cho tung bien the" };
+  }
+
+  const stockFromVariants = normalizedVariants.reduce((sum, item) => sum + item.stock, 0);
+  const finalStock = normalizedVariants.length > 0 ? stockFromVariants : Number(stock);
+  const uniqueSizes = [...new Set(normalizedVariants.map((item) => item.size).filter(Boolean))];
+  const uniqueColors = [...new Set(normalizedVariants.map((item) => item.color).filter(Boolean))];
+  const finalSize = uniqueSizes.length > 0 ? uniqueSizes.join(",") : String(size || "").trim();
+  const finalColors = uniqueColors.length > 0 ? uniqueColors.join(",") : String(colors || "").trim();
+
+  const normalizedImageUrls = Array.isArray(imageUrls)
+    ? imageUrls.map((item) => String(item || "").trim()).filter(Boolean)
+    : parseJsonArray(imageUrls).map((item) => String(item || "").trim()).filter(Boolean);
+  if (normalizedImageUrls.length === 0 && imageUrl) {
+    normalizedImageUrls.push(String(imageUrl).trim());
+  }
+  const finalImageUrl = normalizedImageUrls[0] || "";
+
+  const priceNumber = Number(price);
+  const salePriceNumber =
+    salePriceInput === null || salePriceInput === undefined || salePriceInput === ""
+      ? null
+      : Number(salePriceInput);
+  if (salePriceNumber !== null && (!Number.isFinite(salePriceNumber) || salePriceNumber < 0)) {
+    return { error: "salePrice is invalid" };
+  }
+
+  if (
+    !name ||
+    !Number.isFinite(priceNumber) ||
+    priceNumber < 0 ||
+    !material ||
+    !category ||
+    !description ||
+    !finalImageUrl ||
+    !Number.isFinite(finalStock) ||
+    finalStock < 0
+  ) {
+    return { error: "name, price, stock/material/category/description/imageUrl are required" };
+  }
+
+  return {
+    data: {
+      name: String(name),
+      price: priceNumber,
+      salePrice: salePriceNumber,
+      stock: Number(finalStock),
+      size: finalSize,
+      material: String(material),
+      category: String(category),
+      description: String(description),
+      colors: finalColors,
+      imageUrl: finalImageUrl,
+      imageUrls: JSON.stringify(normalizedImageUrls),
+      variantStocks: JSON.stringify(normalizedVariants),
+      productStatus,
+      isNew: productStatus === "new",
+    },
+  };
+}
+
 app.get("/health", async (_, res) => {
   try {
     await sequelize.authenticate();
@@ -176,9 +327,25 @@ app.get("/products", async (_, res) => {
     const products = await Product.findAll({
       order: [["id", "DESC"]],
     });
-    res.status(200).json(products);
+    res.status(200).json(products.map(normalizeProduct));
   } catch (error) {
     res.status(500).json({ message: "Cannot fetch products", error: error.message });
+  }
+});
+
+app.get("/products/id/:id", async (req, res) => {
+  const productId = Number(req.params.id);
+  if (!Number.isInteger(productId) || productId <= 0) {
+    return res.status(400).json({ message: "Invalid product id" });
+  }
+  try {
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    return res.status(200).json(normalizeProduct(product));
+  } catch (error) {
+    return res.status(500).json({ message: "Cannot fetch product", error: error.message });
   }
 });
 
@@ -190,7 +357,7 @@ app.get("/products/:slug", async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    return res.status(200).json(product);
+    return res.status(200).json(normalizeProduct(product));
   } catch (error) {
     return res.status(500).json({ message: "Cannot fetch product detail", error: error.message });
   }
@@ -220,24 +387,14 @@ app.post("/upload-image", upload.single("image"), async (req, res) => {
 });
 
 app.post("/products", async (req, res) => {
-  const { name, price, stock, size, material, category, description, colors, imageUrl, isNew } = req.body || {};
-  if (
-    !name ||
-    typeof price !== "number" ||
-    typeof stock !== "number" ||
-    !size ||
-    !material ||
-    !category ||
-    !description ||
-    !imageUrl
-  ) {
-    return res
-      .status(400)
-      .json({ message: "name, price, stock, size, material, category, description, imageUrl are required" });
+  const built = buildProductPayload(req.body || {}, null);
+  if (built.error) {
+    return res.status(400).json({ message: built.error });
   }
 
   try {
-    const baseSlug = slugify(name) || "product";
+    const payload = built.data;
+    const baseSlug = slugify(payload.name) || "product";
     const sameSlugCount = await Product.count({
       where: {
         slug: {
@@ -248,21 +405,88 @@ app.post("/products", async (req, res) => {
     const slug = sameSlugCount > 0 ? `${baseSlug}-${sameSlugCount + 1}` : baseSlug;
 
     const product = await Product.create({
-      name,
+      ...payload,
       slug,
-      price: Number(price),
-      stock: Number(stock),
-      size: String(size),
-      material: String(material),
-      category: String(category),
-      description: String(description),
-      colors: colors ? String(colors) : "",
-      imageUrl: String(imageUrl),
-      isNew: typeof isNew === "boolean" ? isNew : false,
     });
-    return res.status(201).json(product);
+    return res.status(201).json(normalizeProduct(product));
   } catch (error) {
     return res.status(500).json({ message: "Cannot create product", error: error.message });
+  }
+});
+
+app.patch("/products/:id", async (req, res) => {
+  const productId = Number(req.params.id);
+  if (!Number.isInteger(productId) || productId <= 0) {
+    return res.status(400).json({ message: "Invalid product id" });
+  }
+
+  try {
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const current = normalizeProduct(product);
+    const built = buildProductPayload(req.body || {}, current);
+    if (built.error) {
+      return res.status(400).json({ message: built.error });
+    }
+
+    const nextName = String((req.body || {}).name || current.name);
+    if (normalizeText(nextName) !== normalizeText(current.name)) {
+      const baseSlug = slugify(nextName) || "product";
+      const sameSlugCount = await Product.count({
+        where: {
+          slug: {
+            [Op.like]: `${baseSlug}%`,
+          },
+          id: {
+            [Op.ne]: productId,
+          },
+        },
+      });
+      built.data.slug = sameSlugCount > 0 ? `${baseSlug}-${sameSlugCount + 1}` : baseSlug;
+    }
+
+    await product.update(built.data);
+    return res.status(200).json(normalizeProduct(product));
+  } catch (error) {
+    return res.status(500).json({ message: "Cannot update product", error: error.message });
+  }
+});
+
+app.patch("/products/:id/status", async (req, res) => {
+  const productId = Number(req.params.id);
+  const nextStatus = String(req.body?.productStatus || "").toLowerCase();
+  const salePriceInput = req.body?.salePrice;
+  if (!Number.isInteger(productId) || productId <= 0) {
+    return res.status(400).json({ message: "Invalid product id" });
+  }
+  if (!allowedProductStatuses.includes(nextStatus)) {
+    return res.status(400).json({ message: "Invalid productStatus" });
+  }
+
+  const parsedSalePrice =
+    salePriceInput === null || salePriceInput === undefined || salePriceInput === ""
+      ? null
+      : Number(salePriceInput);
+  if (parsedSalePrice !== null && (!Number.isFinite(parsedSalePrice) || parsedSalePrice < 0)) {
+    return res.status(400).json({ message: "salePrice is invalid" });
+  }
+
+  try {
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    await product.update({
+      productStatus: nextStatus,
+      salePrice: parsedSalePrice,
+      isNew: nextStatus === "new",
+    });
+    return res.status(200).json(normalizeProduct(product));
+  } catch (error) {
+    return res.status(500).json({ message: "Cannot update product status", error: error.message });
   }
 });
 

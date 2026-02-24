@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Search, MoreHorizontal, Eye, ChevronDown } from "lucide-react"
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { MoreHorizontal, Search, Trash2, Eye } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -15,92 +15,161 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
-import { orders as initialOrders, formatPrice, type Order } from "@/lib/data"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ApiOrder, formatOrderDate, formatOrderPrice, OrderStatus } from "@/lib/order";
 
-type StatusKey = Order["status"]
+const allStatuses: OrderStatus[] = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
 const statusConfig: Record<
-  StatusKey,
+  OrderStatus,
   { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
 > = {
-  pending: { label: "Cho xu ly", variant: "outline" },
-  processing: { label: "Dang xu ly", variant: "secondary" },
-  shipped: { label: "Dang giao", variant: "default" },
-  delivered: { label: "Da giao", variant: "default" },
-  cancelled: { label: "Da huy", variant: "destructive" },
-}
+  pending: { label: "Chờ xử lý", variant: "outline" },
+  processing: { label: "Đang xử lý", variant: "secondary" },
+  shipped: { label: "Đang giao", variant: "default" },
+  delivered: { label: "Đã giao", variant: "default" },
+  cancelled: { label: "Đã hủy", variant: "destructive" },
+};
 
-const allStatuses: StatusKey[] = ["pending", "processing", "shipped", "delivered", "cancelled"]
+const statusTriggerClass: Record<OrderStatus, string> = {
+  pending: "border-slate-300 bg-slate-50 text-slate-700",
+  processing: "border-amber-300 bg-amber-50 text-amber-700",
+  shipped: "border-blue-300 bg-blue-50 text-blue-700",
+  delivered: "border-emerald-300 bg-emerald-50 text-emerald-700",
+  cancelled: "border-red-300 bg-red-50 text-red-700",
+};
 
 export default function OrdersPage() {
-  const [orderList, setOrderList] = useState<Order[]>(initialOrders)
-  const [search, setSearch] = useState("")
-  const [activeTab, setActiveTab] = useState("all")
-  const [detailOrder, setDetailOrder] = useState<Order | null>(null)
+  const router = useRouter();
+  const [orderList, setOrderList] = useState<ApiOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [message, setMessage] = useState("");
 
-  const filtered = orderList.filter((o) => {
-    const matchSearch =
-      o.id.toLowerCase().includes(search.toLowerCase()) ||
-      o.customer.toLowerCase().includes(search.toLowerCase())
-    const matchTab = activeTab === "all" || o.status === activeTab
-    return matchSearch && matchTab
-  })
+  async function fetchOrders() {
+    setLoading(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/orders", { cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.message || "Không thể tải danh sách đơn hàng.");
+      }
+      setOrderList(Array.isArray(result) ? result : []);
+    } catch (error) {
+      setMessage((error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  function updateStatus(orderId: string, newStatus: StatusKey) {
-    setOrderList((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-    )
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const filtered = useMemo(() => {
+    return orderList.filter((o) => {
+      const q = search.toLowerCase();
+      const matchSearch =
+        String(o.orderCode || "").toLowerCase().includes(q) ||
+        String(o.customerName || "").toLowerCase().includes(q);
+      const matchTab = activeTab === "all" || o.status === activeTab;
+      return matchSearch && matchTab;
+    });
+  }, [orderList, search, activeTab]);
+  const itemsPerPage = 10;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const pagedOrders = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(start, start + itemsPerPage);
+  }, [filtered, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, activeTab]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  async function handleUpdateStatus(orderId: number, nextStatus: OrderStatus) {
+    try {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.message || "Cập nhật trạng thái thất bại.");
+      }
+
+      setOrderList((prev) =>
+        prev.map((order) => (order.id === orderId ? { ...order, status: result.status } : order))
+      );
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
+  }
+
+  async function handleDeleteOrder(orderId: number) {
+    try {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.message || "Xóa đơn hàng thất bại.");
+      }
+      setOrderList((prev) => prev.filter((item) => item.id !== orderId));
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
-        <h1 className="font-serif text-2xl font-bold text-foreground">Don hang</h1>
-        <p className="text-sm text-muted-foreground">
-          Quan ly don hang cua hang ({orderList.length} don hang)
-        </p>
+        <h1 className="font-serif text-2xl font-bold text-foreground">Đơn hàng</h1>
+        <p className="text-sm text-muted-foreground">Quản lý đơn hàng ({orderList.length} đơn)</p>
       </div>
 
-      {/* Tabs & Search */}
       <div className="flex flex-col gap-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">
-              Tất cả ({orderList.length})
-            </TabsTrigger>
-            {allStatuses.map((s) => (
-              <TabsTrigger key={s} value={s}>
-                {statusConfig[s].label} ({orderList.filter((o) => o.status === s).length})
+            <TabsTrigger value="all">Tất cả ({orderList.length})</TabsTrigger>
+            {allStatuses.map((status) => (
+              <TabsTrigger key={status} value={status}>
+                {statusConfig[status].label} ({orderList.filter((order) => order.status === status).length})
               </TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
+
         <Card>
           <CardContent className="pt-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Tim kiem theo ma don hoac ten khach hang..."
+                placeholder="Tìm theo mã đơn hoặc tên khách hàng..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -110,141 +179,144 @@ export default function OrdersPage() {
         </Card>
       </div>
 
-      {/* Table */}
+      {message ? (
+        <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          {message}
+        </p>
+      ) : null}
+
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Ma don</TableHead>
-                <TableHead>Khach hang</TableHead>
-                <TableHead>Ngay dat</TableHead>
-                <TableHead>sản phẩm</TableHead>
-                <TableHead>Trang thai</TableHead>
-                <TableHead className="text-right">Tong tien</TableHead>
+                <TableHead>Mã đơn</TableHead>
+                <TableHead>Khách hàng</TableHead>
+                <TableHead>Ngày đặt</TableHead>
+                <TableHead>Sản phẩm</TableHead>
+                <TableHead className="text-right">Tổng tiền</TableHead>
+                <TableHead>Trạng thái</TableHead>
                 <TableHead className="w-[60px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((order) => {
-                const status = statusConfig[order.status]
-                return (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{order.customer}</p>
-                        <p className="text-xs text-muted-foreground">{order.email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{order.date}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {order.items.length} sản phẩm
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={status.variant}>{status.label}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatPrice(order.total)}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-8">
-                            <MoreHorizontal className="size-4" />
-                            <span className="sr-only">Thao tac</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setDetailOrder(order)}>
-                            <Eye className="mr-2 size-4" />
-                            Chi tiet
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                              <ChevronDown className="mr-2 size-4" />
-                              Cap nhat trang thai
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent>
-                              {allStatuses.map((s) => (
-                                <DropdownMenuItem
-                                  key={s}
-                                  onClick={() => updateStatus(order.id, s)}
-                                  disabled={order.status === s}
-                                >
-                                  {statusConfig[s].label}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-              {filtered.length === 0 && (
+              {loading ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    Khong tim thay don hang nao.
+                    Đang tải đơn hàng...
                   </TableCell>
                 </TableRow>
-              )}
+              ) : null}
+
+              {!loading && filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                    Không tìm thấy đơn hàng nào.
+                  </TableCell>
+                </TableRow>
+              ) : null}
+
+              {!loading
+                ? pagedOrders.map((order) => (
+                    <TableRow
+                      key={order.id}
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/admin/orders/${order.id}`)}
+                    >
+                      <TableCell className="font-medium">{order.orderCode}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{order.customerName}</p>
+                          <p className="text-xs text-muted-foreground">{order.phone}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{formatOrderDate(order.createdAt)}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {order.itemCount} sản phẩm
+                      </TableCell>
+                      <TableCell className="text-right font-medium">{formatOrderPrice(order.totalAmount)}</TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Select
+                          value={order.status}
+                          onValueChange={(value) => handleUpdateStatus(order.id, value as OrderStatus)}
+                        >
+                          <SelectTrigger className={`h-8 w-[158px] ${statusTriggerClass[order.status]}`}>
+                            <SelectValue>{statusConfig[order.status].label}</SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allStatuses.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {statusConfig[status].label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8">
+                              <MoreHorizontal className="size-4" />
+                              <span className="sr-only">Thao tác</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => router.push(`/admin/orders/${order.id}`)}>
+                              <Eye className="mr-2 size-4" />
+                              Xem chi tiết
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => handleDeleteOrder(order.id)}
+                            >
+                              <Trash2 className="mr-2 size-4" />
+                              Xóa đơn hàng
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : null}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      {/* Order Detail Dialog */}
-      <Dialog open={!!detailOrder} onOpenChange={() => setDetailOrder(null)}>
-        <DialogContent className="max-w-md">
-          {detailOrder && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="font-serif">
-                  Chi tiet don hang {detailOrder.id}
-                </DialogTitle>
-                <DialogDescription>
-                  Dat ngay {detailOrder.date} boi {detailOrder.customer}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Trang thai</span>
-                  <Badge variant={statusConfig[detailOrder.status].variant}>
-                    {statusConfig[detailOrder.status].label}
-                  </Badge>
-                </div>
-                <Separator />
-                <div>
-                  <p className="mb-2 text-sm font-medium">sản phẩm</p>
-                  <div className="space-y-2">
-                    {detailOrder.items.map((item, i) => (
-                      <div key={i} className="flex items-center justify-between text-sm">
-                        <span>
-                          {item.productName} x{item.quantity}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {formatPrice(item.price)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between font-medium">
-                  <span>Tong tien</span>
-                  <span>{formatPrice(detailOrder.total)}</span>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <p>Email: {detailOrder.email}</p>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      {!loading && filtered.length > 0 ? (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            Trước
+          </Button>
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+            <Button
+              key={page}
+              type="button"
+              size="sm"
+              variant={currentPage === page ? "default" : "outline"}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </Button>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Sau
+          </Button>
+        </div>
+      ) : null}
     </div>
-  )
+  );
 }

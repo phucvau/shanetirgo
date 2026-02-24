@@ -13,10 +13,16 @@ services:
       NODE_ENV: production
       PRODUCT_SERVICE_URL: http://product-service:4001
       ORDER_SERVICE_URL: http://order-service:4002
+      CATEGORY_SERVICE_URL: http://category-service:4003
+      COLLECTION_SERVICE_URL: http://collection-service:4004
     depends_on:
       product-service:
         condition: service_healthy
       order-service:
+        condition: service_healthy
+      category-service:
+        condition: service_healthy
+      collection-service:
         condition: service_healthy
 
   product-service:
@@ -34,6 +40,9 @@ services:
       MYSQL_DATABASE: shanetirgo
       MYSQL_USER: shane
       MYSQL_PASSWORD: shane123
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
     volumes:
       - ./services/product-service/uploads:/app/uploads
     depends_on:
@@ -68,6 +77,52 @@ services:
       timeout: 3s
       retries: 5
 
+  category-service:
+    build:
+      context: ./services/category-service
+    image: shanetirgo/category-service:local
+    container_name: shanetirgo-category-service
+    ports:
+      - "4003:4003"
+    environment:
+      PORT: 4003
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: shanetirgo
+      MYSQL_USER: shane
+      MYSQL_PASSWORD: shane123
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:4003/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  collection-service:
+    build:
+      context: ./services/collection-service
+    image: shanetirgo/collection-service:local
+    container_name: shanetirgo-collection-service
+    ports:
+      - "4004:4004"
+    environment:
+      PORT: 4004
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: shanetirgo
+      MYSQL_USER: shane
+      MYSQL_PASSWORD: shane123
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:4004/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   mysql:
     image: mysql:8.0
     container_name: shanetirgo-mysql
@@ -81,7 +136,6 @@ services:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./db/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
       interval: 10s

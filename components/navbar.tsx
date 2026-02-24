@@ -2,21 +2,23 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Menu, X, ShoppingBag, Search, User } from "lucide-react"
 import { useCart } from "@/components/cart-provider"
 
 const navLinks = [
-  { label: "Trang chủ", href: "#" },
-  { label: "Bộ sưu tập", href: "#collections" },
-  { label: "sản phẩm", href: "#products" },
-  { label: "Về chúng tôi", href: "#about" },
+  { label: "Trang chủ", href: "/", type: "home" as const },
+  { label: "Bộ sưu tập", href: "/#collections", type: "section" as const, sectionId: "collections" },
+  { label: "sản phẩm", href: "/products", type: "route" as const },
+  { label: "Về chúng tôi", href: "/#about", type: "section" as const, sectionId: "about" },
 ]
 
 export function Navbar() {
+  const router = useRouter()
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cartPop, setCartPop] = useState(false)
+  const [pageTransition, setPageTransition] = useState<"none" | "in" | "out">("none")
   const { items, totalQuantity, isCartOpen, setCartOpen, toggleCart, updateItemQuantity, removeItem } = useCart()
   const previousQuantity = useRef(totalQuantity)
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -37,12 +39,118 @@ export function Navbar() {
     }
   }, [pathname, setCartOpen])
 
+  useEffect(() => {
+    if (pathname !== "/") return
+    const target = window.sessionStorage.getItem("home-scroll-target")
+    if (!target) return
+
+    window.sessionStorage.removeItem("home-scroll-target")
+    window.setTimeout(() => {
+      if (target === "top") {
+        window.scrollTo({ top: 0, behavior: "smooth" })
+        return
+      }
+      const section = document.getElementById(target)
+      if (section) {
+        section.scrollIntoView({ behavior: "smooth", block: "start" })
+      }
+    }, 50)
+  }, [pathname])
+
+  useEffect(() => {
+    const shouldPlayOut = window.sessionStorage.getItem("page-transition-out")
+    if (!shouldPlayOut) return
+
+    window.sessionStorage.removeItem("page-transition-out")
+    setPageTransition("out")
+    const timer = window.setTimeout(() => {
+      setPageTransition("none")
+    }, 520)
+    return () => window.clearTimeout(timer)
+  }, [pathname])
+
+  function navigateWithCover(href: string, samePathAction?: () => void) {
+    const isSamePath = pathname === href
+    setPageTransition("in")
+
+    window.setTimeout(() => {
+      if (isSamePath) {
+        samePathAction?.()
+        setPageTransition("out")
+        window.setTimeout(() => {
+          setPageTransition("none")
+        }, 520)
+        return
+      }
+
+      window.sessionStorage.setItem("page-transition-out", "1")
+      router.push(href)
+    }, 520)
+  }
+
+  function scrollHome(target: "top" | string) {
+    if (pathname !== "/") {
+      window.sessionStorage.setItem("home-scroll-target", target)
+      router.push("/")
+      return
+    }
+
+    if (target === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      return
+    }
+
+    const section = document.getElementById(target)
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }
+
+  function handleNavClick(link: (typeof navLinks)[number], event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault()
+    setMobileOpen(false)
+
+    if (link.type === "home") {
+      scrollHome("top")
+      return
+    }
+
+    if (link.type === "section" && link.sectionId) {
+      scrollHome(link.sectionId)
+      return
+    }
+
+    if (link.type === "route") {
+      navigateWithCover(link.href)
+    }
+  }
+
   return (
     <>
+      {pageTransition !== "none" ? (
+        <div className={`pointer-events-none fixed inset-0 z-[95] bg-background ${pageTransition === "in" ? "page-transition-in" : "page-transition-out"}`}>
+          <div className="flex h-full items-center justify-center">
+            <p className="text-4xl font-bold tracking-widest text-foreground md:text-6xl">
+              <span className="[font-family:var(--font-nosifer)]">SHANE</span>
+              <span className="[font-family:var(--font-script)]">Tirgo</span>
+            </p>
+          </div>
+        </div>
+      ) : null}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
         {/* Logo */}
-        <Link href="/" className="font-serif text-2xl font-bold tracking-widest text-foreground">
+        <Link
+          href="/"
+          onClick={(event) => {
+            event.preventDefault()
+            setMobileOpen(false)
+            navigateWithCover("/", () => {
+              window.scrollTo({ top: 0, behavior: "smooth" })
+            })
+          }}
+          className="font-serif text-2xl font-bold tracking-widest text-foreground"
+        >
           <span className="[font-family:var(--font-nosifer)]">SHANE</span>
           <span className="[font-family:var(--font-script)]">Tirgo</span>
         </Link>
@@ -53,9 +161,11 @@ export function Navbar() {
             <li key={link.label}>
               <Link
                 href={link.href}
-                className="text-sm font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+                onClick={(event) => handleNavClick(link, event)}
+                className="group relative inline-flex overflow-hidden rounded-md px-2 py-1 text-sm font-medium uppercase tracking-wider text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-95"
               >
-                {link.label}
+                <span className="relative z-10">{link.label}</span>
+                <span className="pointer-events-none absolute inset-0 -translate-x-full bg-foreground/10 transition-transform duration-300 group-active:translate-x-0" />
               </Link>
             </li>
           ))}
@@ -63,16 +173,16 @@ export function Navbar() {
 
         {/* Icons */}
         <div className="flex items-center gap-4">
-          <button aria-label="Tim kiem" className="text-foreground transition-colors hover:text-accent">
+          <button aria-label="Tim kiem" className="text-foreground transition-all duration-150 hover:text-accent active:scale-90">
             <Search className="h-5 w-5" />
           </button>
-          <button aria-label="Tai khoan" className="hidden text-foreground transition-colors hover:text-accent md:block">
+          <button aria-label="Tai khoan" className="hidden text-foreground transition-all duration-150 hover:text-accent active:scale-90 md:block">
             <User className="h-5 w-5" />
           </button>
           <button
             aria-label="Giỏ hàng"
             onClick={toggleCart}
-            className={`relative text-foreground transition-all hover:text-accent ${cartPop ? "scale-125" : "scale-100"}`}
+            className={`relative text-foreground transition-all duration-150 hover:text-accent active:scale-90 ${cartPop ? "scale-125" : "scale-100"}`}
           >
             <ShoppingBag className="h-5 w-5" />
             <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
@@ -83,7 +193,7 @@ export function Navbar() {
           {/* Mobile toggle */}
           <button
             aria-label="Mo menu"
-            className="text-foreground md:hidden"
+            className="text-foreground transition-transform duration-150 active:scale-90 md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -99,10 +209,11 @@ export function Navbar() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="block py-3 text-sm font-medium uppercase tracking-wider text-foreground transition-colors hover:text-accent"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={(event) => handleNavClick(link, event)}
+                    className="group relative block overflow-hidden rounded-md py-3 text-sm font-medium uppercase tracking-wider text-foreground transition-all duration-200 hover:text-accent active:scale-[0.99]"
                   >
-                    {link.label}
+                    <span className="relative z-10">{link.label}</span>
+                    <span className="pointer-events-none absolute inset-0 -translate-x-full bg-foreground/10 transition-transform duration-300 group-active:translate-x-0" />
                   </Link>
                 </li>
               ))}
@@ -201,13 +312,16 @@ export function Navbar() {
               >
                 Trở về
               </button>
-              <Link
-                href="/checkout"
-                onClick={() => setCartOpen(false)}
+              <button
+                type="button"
+                onClick={() => {
+                  setCartOpen(false)
+                  navigateWithCover("/checkout")
+                }}
                 className="rounded-md bg-foreground px-4 py-2 text-center text-sm font-medium text-background hover:bg-foreground/90"
               >
                 Thanh toán
-              </Link>
+              </button>
             </div>
           </div>
         </div>

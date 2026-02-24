@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -33,7 +34,7 @@ function formatPrice(value: number) {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, totalQuantity } = useCart();
+  const { items, totalQuantity, clearCart } = useCart();
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -41,6 +42,7 @@ export default function CheckoutPage() {
   const [districtCode, setDistrictCode] = useState("");
   const [wardCode, setWardCode] = useState("");
   const [street, setStreet] = useState("");
+  const [note, setNote] = useState("");
   const [placingOrder, setPlacingOrder] = useState(false);
   const [message, setMessage] = useState("");
   const [locationError, setLocationError] = useState("");
@@ -141,9 +143,45 @@ export default function CheckoutPage() {
 
     setPlacingOrder(true);
     setMessage("");
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: fullName.trim(),
+          phone: phone.trim(),
+          city: cityName,
+          district: districtName,
+          ward: wardName,
+          street: street.trim(),
+          addressLine: `${street.trim()}, ${wardName}, ${districtName}, ${cityName}`,
+          note: note.trim(),
+          totalAmount: subtotal,
+          items: items.map((item) => ({
+            productId: item.productId,
+            slug: item.slug,
+            productName: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            size: item.size || "",
+            color: item.color || "",
+            imageUrl: item.imageUrl || "",
+          })),
+        }),
+      });
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    router.push("/checkout/success");
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.message || "Khong the tao don hang.");
+      }
+
+      clearCart();
+      router.push(`/checkout/success?orderId=${result.id}`);
+    } catch (error) {
+      setMessage((error as Error).message);
+    } finally {
+      setPlacingOrder(false);
+    }
   }
 
   return (
@@ -257,6 +295,17 @@ export default function CheckoutPage() {
                     value={street}
                     onChange={(e) => setStreet(e.target.value)}
                     placeholder="So 123, duong ABC"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="note">Ghi chú</Label>
+                  <Textarea
+                    id="note"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao..."
+                    rows={3}
                   />
                 </div>
 

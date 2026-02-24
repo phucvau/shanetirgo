@@ -28,6 +28,7 @@ type CartContextValue = {
   addItem: (payload: AddToCartPayload) => void;
   updateItemQuantity: (lineId: string, quantity: number) => void;
   removeItem: (lineId: string) => void;
+  clearCart: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -128,6 +129,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => prev.filter((item) => item.lineId !== lineId));
   }
 
+  function clearCart() {
+    setItems([]);
+  }
+
   function toggleCart() {
     setCartOpen((prev) => !prev);
   }
@@ -147,6 +152,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       addItem,
       updateItemQuantity,
       removeItem,
+      clearCart,
     }),
     [items, totalQuantity, isCartOpen]
   );

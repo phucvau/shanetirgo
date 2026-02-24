@@ -33,14 +33,6 @@ export type Customer = {
   avatar?: string
 }
 
-export type Collection = {
-  id: number
-  title: string
-  description: string
-  image: string
-  href: string
-  productCount: number
-}
 
 export const products: Product[] = [
   {
@@ -236,33 +228,6 @@ export const customers: Customer[] = [
   { id: 6, name: "Vo Thi Lan", email: "lan.vo@email.com", phone: "0967 890 123", totalOrders: 4, totalSpent: 7800000, joinedDate: "2025-07-18" },
   { id: 7, name: "Bui Quang Huy", email: "huy.bui@email.com", phone: "0978 901 234", totalOrders: 1, totalSpent: 2280000, joinedDate: "2026-01-02" },
   { id: 8, name: "Dang Thi Hoa", email: "hoa.dang@email.com", phone: "0989 012 345", totalOrders: 7, totalSpent: 18500000, joinedDate: "2025-02-28" },
-]
-
-export const collections: Collection[] = [
-  {
-    id: 1,
-    title: "Xuân Hè 2026",
-    description: "Những thiết kế thoáng mát, phóng khoáng cho ngày nắng.",
-    image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=80",
-    href: "#",
-    productCount: 24,
-  },
-  {
-    id: 2,
-    title: "Thu Đông 2026",
-    description: "Am ap, ca tinh voi tong mau tram am.",
-    image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80",
-    href: "#",
-    productCount: 18,
-  },
-  {
-    id: 3,
-    title: "Phụ kiện",
-    description: "Diem nhan hoan hao cho moi trang phuc.",
-    image: "https://images.unsplash.com/photo-1611923134239-b9be5816e23c?w=600&q=80",
-    href: "#",
-    productCount: 12,
-  },
 ]
 
 export const revenueData = [
