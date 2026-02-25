@@ -1,26 +1,27 @@
-"use client"
+"use client";
 
+import { useEffect, useMemo, useState } from "react";
 import {
-  DollarSign,
-  ShoppingCart,
-  Users,
-  Package,
-  TrendingUp,
   ArrowUpRight,
-} from "lucide-react"
-import Link from "next/link"
+  DollarSign,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
 import {
   Bar,
   BarChart,
+  CartesianGrid,
   ResponsiveContainer,
+  Tooltip as RechartsTooltip,
   XAxis,
   YAxis,
-  Tooltip as RechartsTooltip,
-  CartesianGrid,
-} from "recharts"
+} from "recharts";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -28,39 +29,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { orders, products, customers, revenueData, formatPrice } from "@/lib/data"
+} from "@/components/ui/table";
+import { type ApiOrder, formatOrderDate, formatOrderPrice } from "@/lib/order";
+import { type ApiProduct } from "@/lib/storefront-products";
 
-const stats = [
-  {
-    title: "Doanh thu",
-    value: formatPrice(78000000),
-    change: "+12.5%",
-    icon: DollarSign,
-    description: "So voi thang truoc",
-  },
-  {
-    title: "Don hang",
-    value: orders.length.toString(),
-    change: "+8.2%",
-    icon: ShoppingCart,
-    description: "Tong don thang nay",
-  },
-  {
-    title: "Khach hang",
-    value: customers.length.toString(),
-    change: "+4.1%",
-    icon: Users,
-    description: "Khach hang moi",
-  },
-  {
-    title: "sản phẩm",
-    value: products.length.toString(),
-    change: "+2",
-    icon: Package,
-    description: "Dang hoat dong",
-  },
-]
+type TopProduct = {
+  id: string;
+  name: string;
+  category: string;
+  sold: number;
+  revenue: number;
+};
 
 const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   pending: { label: "Cho xu ly", variant: "outline" },
@@ -68,34 +47,189 @@ const statusMap: Record<string, { label: string; variant: "default" | "secondary
   shipped: { label: "Dang giao", variant: "default" },
   delivered: { label: "Da giao", variant: "default" },
   cancelled: { label: "Da huy", variant: "destructive" },
+};
+
+function getRecentMonths(count: number) {
+  const now = new Date();
+  const list: Array<{ key: string; month: string }> = [];
+  for (let i = count - 1; i >= 0; i -= 1) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const month = `T${date.getMonth() + 1}`;
+    list.push({ key, month });
+  }
+  return list;
 }
 
 export default function AdminDashboard() {
+  const [orders, setOrders] = useState<ApiOrder[]>([]);
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadData() {
+      setLoading(true);
+      setError("");
+      try {
+        const [ordersRes, productsRes] = await Promise.all([
+          fetch("/api/orders", { cache: "no-store" }),
+          fetch("/api/products", { cache: "no-store" }),
+        ]);
+
+        if (!ordersRes.ok) {
+          const body = await ordersRes.json().catch(() => ({}));
+          throw new Error(body?.message || "Không thể tải đơn hàng");
+        }
+        if (!productsRes.ok) {
+          const body = await productsRes.json().catch(() => ({}));
+          throw new Error(body?.message || "Không thể tải sản phẩm");
+        }
+
+        const [ordersData, productsData] = await Promise.all([
+          ordersRes.json(),
+          productsRes.json(),
+        ]);
+
+        if (cancelled) return;
+        setOrders(Array.isArray(ordersData) ? ordersData : []);
+        setProducts(Array.isArray(productsData) ? productsData : []);
+      } catch (err) {
+        if (cancelled) return;
+        setError((err as Error).message || "Không thể tải dữ liệu tổng quan");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const metrics = useMemo(() => {
+    const revenue = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
+    const customerCount = new Set(
+      orders
+        .map((order) => String(order.phone || "").trim())
+        .filter(Boolean)
+    ).size;
+    return {
+      revenue,
+      orderCount: orders.length,
+      customerCount,
+      productCount: products.length,
+    };
+  }, [orders, products]);
+
+  const revenueData = useMemo(() => {
+    const months = getRecentMonths(6);
+    const totals = new Map<string, number>();
+    for (const order of orders) {
+      const date = new Date(order.createdAt);
+      if (Number.isNaN(date.getTime())) continue;
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      totals.set(key, (totals.get(key) || 0) + Number(order.totalAmount || 0));
+    }
+    return months.map((month) => ({
+      month: month.month,
+      revenue: totals.get(month.key) || 0,
+    }));
+  }, [orders]);
+
+  const topProducts = useMemo<TopProduct[]>(() => {
+    const productBySlug = new Map<string, ApiProduct>();
+    for (const product of products) {
+      const slug = String(product.slug || "").trim();
+      if (slug) productBySlug.set(slug, product);
+    }
+
+    const map = new Map<string, TopProduct>();
+    for (const order of orders) {
+      for (const item of order.items || []) {
+        const slug = String(item.slug || "").trim();
+        const key = slug || item.productName;
+        const sold = Number(item.quantity || 0);
+        const amount = Number(item.price || 0) * sold;
+        if (!key || sold <= 0) continue;
+
+        const product = slug ? productBySlug.get(slug) : null;
+        const existing = map.get(key);
+        if (!existing) {
+          map.set(key, {
+            id: key,
+            name: String(item.productName || product?.name || "Sản phẩm"),
+            category: String(product?.category || "-"),
+            sold,
+            revenue: amount,
+          });
+          continue;
+        }
+
+        existing.sold += sold;
+        existing.revenue += amount;
+      }
+    }
+
+    return [...map.values()].sort((a, b) => b.sold - a.sold).slice(0, 5);
+  }, [orders, products]);
+
+  const statCards = [
+    {
+      title: "Doanh thu",
+      value: formatOrderPrice(metrics.revenue),
+      icon: DollarSign,
+      description: "Tổng từ dữ liệu đơn hàng",
+    },
+    {
+      title: "Đơn hàng",
+      value: String(metrics.orderCount),
+      icon: ShoppingCart,
+      description: "Tổng số đơn đã ghi nhận",
+    },
+    {
+      title: "Khách hàng",
+      value: String(metrics.customerCount),
+      icon: Users,
+      description: "Tính theo số điện thoại",
+    },
+    {
+      title: "Sản phẩm",
+      value: String(metrics.productCount),
+      icon: Package,
+      description: "Đang có trong hệ thống",
+    },
+  ];
+
+  const recentOrders = orders.slice(0, 5);
+
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <div>
         <h1 className="font-serif text-2xl font-bold text-foreground">Tổng quan</h1>
-        <p className="text-sm text-muted-foreground">
-          Chào mừng trở lại! Đây là tổng quan của ngày hôm nay!
-        </p>
+        <p className="text-sm text-muted-foreground">Dữ liệu realtime từ API sản phẩm và đơn hàng.</p>
       </div>
 
-      {/* STất cảrds */}
+      {error ? (
+        <Card className="border-destructive/30">
+          <CardContent className="pt-6 text-sm text-destructive">{error}</CardContent>
+        </Card>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {statCards.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
               <stat.icon className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-2xl font-bold">{loading ? "..." : stat.value}</div>
               <p className="flex items-center gap-1 text-xs text-muted-foreground">
                 <TrendingUp className="size-3 text-emerald-600" />
-                <span className="font-medium text-emerald-600">{stat.change}</span>
                 {stat.description}
               </p>
             </CardContent>
@@ -103,32 +237,25 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Chart + Top Products */}
       <div className="grid gap-6 lg:grid-cols-7">
-        {/* Revenue Chart */}
         <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle className="text-base">Doanh thu</CardTitle>
-            <CardDescription>6 thang gan nhat</CardDescription>
+            <CardDescription>6 tháng gần nhất</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={revenueData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis
-                  dataKey="month"
-                  className="text-xs fill-muted-foreground"
-                  tickLine={false}
-                  axisLine={false}
-                />
+                <XAxis dataKey="month" className="text-xs fill-muted-foreground" tickLine={false} axisLine={false} />
                 <YAxis
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`}
+                  tickFormatter={(v) => `${(Number(v) / 1000000).toFixed(0)}M`}
                 />
                 <RechartsTooltip
-                  formatter={(value: number) => [formatPrice(value), "Doanh thu"]}
+                  formatter={(value: number) => [formatOrderPrice(value), "Doanh thu"]}
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     borderColor: "hsl(var(--border))",
@@ -137,55 +264,51 @@ export default function AdminDashboard() {
                   }}
                   labelStyle={{ color: "hsl(var(--foreground))" }}
                 />
-                <Bar
-                  dataKey="revenue"
-                  fill="hsl(var(--foreground))"
-                  radius={[4, 4, 0, 0]}
-                />
+                <Bar dataKey="revenue" fill="hsl(var(--foreground))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Top Products */}
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle className="text-base">sản phẩm ban chay</CardTitle>
-            <CardDescription>Top sản phẩm thang nay</CardDescription>
+            <CardTitle className="text-base">Sản phẩm bán chạy</CardTitle>
+            <CardDescription>Tính theo số lượng đã bán</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {products.slice(0, 5).map((product, i) => (
-                <div key={product.id} className="flex items-center gap-3">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-medium">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.category}</p>
+              {topProducts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Chưa có dữ liệu sản phẩm bán chạy.</p>
+              ) : (
+                topProducts.map((product, i) => (
+                  <div key={product.id} className="flex items-center gap-3">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{product.name}</p>
+                      <p className="text-xs text-muted-foreground">{product.category}</p>
+                    </div>
+                    <span className="text-xs font-semibold text-muted-foreground">x{product.sold}</span>
                   </div>
-                  <span className="text-sm font-semibold">
-                    {formatPrice(product.price)}
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Orders */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-base">Don hang gan day</CardTitle>
-            <CardDescription>Cac don hang moi nhat</CardDescription>
+            <CardTitle className="text-base">Đơn hàng gần đây</CardTitle>
+            <CardDescription>Các đơn hàng mới nhất</CardDescription>
           </div>
           <Link
             href="/admin/orders"
-            className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            Xem Tất cả
+            Xem tất cả
             <ArrowUpRight className="size-3" />
           </Link>
         </CardHeader>
@@ -193,34 +316,40 @@ export default function AdminDashboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Ma don</TableHead>
-                <TableHead>Khach hang</TableHead>
-                <TableHead>Ngay</TableHead>
-                <TableHead>Trang thai</TableHead>
-                <TableHead className="text-right">Tong tien</TableHead>
+                <TableHead>Mã đơn</TableHead>
+                <TableHead>Khách hàng</TableHead>
+                <TableHead>Ngày</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="text-right">Tổng tiền</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.slice(0, 5).map((order) => {
-                const status = statusMap[order.status]
-                return (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{order.customer}</TableCell>
-                    <TableCell className="text-muted-foreground">{order.date}</TableCell>
-                    <TableCell>
-                      <Badge variant={status.variant}>{status.label}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatPrice(order.total)}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
+              {recentOrders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                    Chưa có đơn hàng nào.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                recentOrders.map((order) => {
+                  const status = statusMap[order.status] || statusMap.pending;
+                  return (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.orderCode || `ORD-${String(order.id).padStart(6, "0")}`}</TableCell>
+                      <TableCell>{order.customerName}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatOrderDate(order.createdAt)}</TableCell>
+                      <TableCell>
+                        <Badge variant={status.variant}>{status.label}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">{formatOrderPrice(order.totalAmount)}</TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
