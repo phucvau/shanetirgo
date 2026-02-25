@@ -396,25 +396,6 @@ export default function CheckoutPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="voucher">Voucher</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="voucher"
-                      value={voucherCodeInput}
-                      onChange={(e) => setVoucherCodeInput(e.target.value.toUpperCase())}
-                      placeholder="Nhập mã giảm giá"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setVoucherDialogOpen(true)}
-                    >
-                      Chọn voucher
-                    </Button>
-                  </div>
-                </div>
-
                 {locationError ? (
                   <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                     {locationError}
@@ -456,6 +437,25 @@ export default function CheckoutPage() {
                       </div>
                     ))
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="voucher">Voucher</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="voucher"
+                      value={voucherCodeInput}
+                      onChange={(e) => setVoucherCodeInput(e.target.value.toUpperCase())}
+                      placeholder="Nhập mã giảm giá"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setVoucherDialogOpen(true)}
+                    >
+                      Chọn voucher
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-2 border-t border-border pt-3 text-sm">
