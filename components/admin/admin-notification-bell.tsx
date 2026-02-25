@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, ShoppingCart, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
 
 type NotificationItem = {
   id: string;
+  orderId: number;
   title: string;
   description: string;
   time: string;
@@ -26,6 +28,8 @@ type OrderPayload = {
   totalAmount?: number;
   createdAt?: string;
 };
+
+const STORAGE_KEY = "admin_order_notifications";
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -89,8 +93,29 @@ function playNotificationSound() {
 }
 
 export function AdminNotificationBell() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as NotificationItem[];
+      if (!Array.isArray(parsed)) return;
+      setNotifications(parsed.slice(0, 100));
+    } catch {
+      // ignore malformed storage
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+    } catch {
+      // ignore storage errors
+    }
+  }, [notifications]);
 
   const unreadCount = useMemo(
     () => notifications.filter((item) => item.unread).length,
@@ -132,6 +157,7 @@ export function AdminNotificationBell() {
           const next: NotificationItem[] = [
             {
               id: `order-${id}`,
+              orderId: id,
               title: "Đơn hàng mới",
               description,
               time: formatTime(order.createdAt),
@@ -213,9 +239,19 @@ export function AdminNotificationBell() {
           ) : (
             <div className="space-y-2">
               {notifications.map((item) => (
-                <div
+                <button
                   key={item.id}
-                  className={`rounded-md border p-3 ${item.unread ? "border-black/30 bg-muted/40" : "border-border bg-background"}`}
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    setNotifications((prev) =>
+                      prev.map((entry) =>
+                        entry.id === item.id ? { ...entry, unread: false } : entry
+                      )
+                    );
+                    router.push(`/admin/orders/${item.orderId}`);
+                  }}
+                  className={`w-full cursor-pointer rounded-md border p-3 text-left transition-colors hover:bg-muted/60 ${item.unread ? "border-black/30 bg-muted/40" : "border-border bg-background"}`}
                 >
                   <div className="mb-1 flex items-center gap-2">
                     <ShoppingCart className="h-3.5 w-3.5" />
@@ -223,7 +259,7 @@ export function AdminNotificationBell() {
                   </div>
                   <p className="text-xs text-muted-foreground">{item.description}</p>
                   <p className="mt-1 text-[11px] text-muted-foreground">{item.time}</p>
-                </div>
+                </button>
               ))}
             </div>
           )}
