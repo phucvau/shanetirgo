@@ -3,7 +3,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { AdminNotificationBell } from "@/components/admin/admin-notification-bell"
 
 export const metadata = {
-  title: "LUXE Admin - Quan ly cua hang",
+  title: "LUXE Admin - Quản lý cửa hàng",
   description: "Trang quan ly cua hang thoi trang LUXE",
 }
 

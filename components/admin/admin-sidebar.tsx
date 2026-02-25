@@ -36,13 +36,13 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 const navMain = [
-  { title: "Tong quan", href: "/admin", icon: LayoutDashboard },
-  { title: "sản phẩm", href: "/admin/products", icon: Package },
-  { title: "Don hang", href: "/admin/orders", icon: ShoppingCart },
+  { title: "Tổng quan", href: "/admin", icon: LayoutDashboard },
+  { title: "Sản phẩm", href: "/admin/products", icon: Package },
+  { title: "Đơn hàng", href: "/admin/orders", icon: ShoppingCart },
   { title: "Danh mục", href: "/admin/categories", icon: Tags },
-  { title: "Khach hang", href: "/admin/customers", icon: Users },
+  { title: "Khách hàng", href: "/admin/customers", icon: Users },
   { title: "Bộ sưu tập", href: "/admin/collections", icon: FolderOpen },
-  { title: "Cai dat", href: "/admin/settings", icon: Settings },
+  { title: "Cài đặt", href: "/admin/settings", icon: Settings },
 ]
 
 export function AdminSidebar() {
@@ -60,9 +60,9 @@ export function AdminSidebar() {
                   <span className="font-serif text-sm font-bold">L</span>
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-serif font-semibold">LUXE</span>
+                  <span className="truncate font-serif font-semibold">Shane Tirgo</span>
                   <span className="truncate text-xs text-muted-foreground">
-                    Quan ly cua hang
+                    Quản lý cửa hàng
                   </span>
                 </div>
               </Link>
@@ -73,7 +73,7 @@ export function AdminSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu chinh</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu chính</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navMain.map((item) => {
@@ -107,7 +107,7 @@ export function AdminSidebar() {
                 className="text-muted-foreground hover:text-foreground"
               >
                 <ExternalLink />
-                <span>Xem cua hang</span>
+                <span>Xem cửa hàng</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -126,7 +126,7 @@ export function AdminSidebar() {
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">Admin</span>
                     <span className="truncate text-xs text-muted-foreground">
-                      admin@luxe.vn
+                      admin@shanetirgo.vn
                     </span>
                   </div>
                   <ChevronUp className="ml-auto size-4" />
@@ -134,12 +134,12 @@ export function AdminSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
-                side="top"
+                side="bottom"
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuItem>Ho so</DropdownMenuItem>
-                <DropdownMenuItem>Cai dat</DropdownMenuItem>
+                <DropdownMenuItem>Hồ sơ</DropdownMenuItem>
+                <DropdownMenuItem>Cài đặt</DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={async () => {
                     await fetch("/api/admin/auth/logout", { method: "POST" })
@@ -147,7 +147,7 @@ export function AdminSidebar() {
                     router.refresh()
                   }}
                 >
-                  Dang xuat
+                  Đăng xuất
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

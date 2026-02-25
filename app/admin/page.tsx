@@ -75,9 +75,9 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="font-serif text-2xl font-bold text-foreground">Tong quan</h1>
+        <h1 className="font-serif text-2xl font-bold text-foreground">Tổng quan</h1>
         <p className="text-sm text-muted-foreground">
-          Chao mung tro lai! Day la tong quan cua hang hom nay.
+          Chào mừng trở lại! Đây là tổng quan của ngày hôm nay!
         </p>
       </div>
 
