@@ -1,4 +1,4 @@
-// Shared types & mock data for LUXE storefront and admin
+// Shared types & mock data for Shane Tirgo storefront and admin
 
 export type Product = {
   id: number

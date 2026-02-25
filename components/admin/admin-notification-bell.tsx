@@ -134,7 +134,7 @@ function buildOrderNotification(order: OrderPayload): NotificationItem | null {
     id: `order-${id}-${Date.now()}`,
     kind: "order",
     orderId: id,
-    title: "Đơn hàng mới",
+    title: "Bạn có đơn hàng mới, kiểm tra ngay nhé!",
     description: `${orderCode} • ${order.customerName || "Khách mới"} • ${formatMoney(Number(order.totalAmount || 0))}`,
     time: formatTime(order.createdAt),
     unread: true,

@@ -32,8 +32,8 @@ const _nosifer = Nosifer({
 });
 
 export const metadata: Metadata = {
-  title: "ShaneTirgo - Thoi Trang Hien Dai",
-  description: "Khám phá Bộ sưu tập thoi trang hien dai, sang trong va tinh te. Thiet ke doc dao, chat lieu cao cap.",
+  title: "ShaneTirgo - Thời trang hiện đại",
+  description: "Khám phá Bộ sưu tập thời trang hiện đại, sang trọng và tinh tế. Thiết kế độc đáo, chất liệu cao cấp.",
 }
 
 export const viewport: Viewport = {

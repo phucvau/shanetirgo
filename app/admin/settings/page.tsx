@@ -11,11 +11,11 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 
 export default function SettingsPage() {
-  const [storeName, setStoreName] = useState("LUXE")
+  const [storeName, setStoreName] = useState("Shane Tirgo")
   const [storeDescription, setStoreDescription] = useState(
-    "Khám phá Bộ sưu tập thoi trang hien dai, sang trong va tinh te."
+    "Khám phá Bộ sưu tập Thời trang hiện đại, sang trong va tinh te."
   )
-  const [email, setEmail] = useState("contact@luxe.vn")
+  const [email, setEmail] = useState("contact@Shane Tirgo.vn")
   const [phone, setPhone] = useState("0912 345 678")
   const [address, setAddress] = useState("123 Nguyen Hue, Quan 1, TP. Ho Chi Minh")
   const [enableNotifications, setEnableNotifications] = useState(true)
