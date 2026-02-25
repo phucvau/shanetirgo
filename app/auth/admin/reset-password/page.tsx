@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function AdminResetPasswordPage() {
+function AdminResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
@@ -96,5 +96,13 @@ export default function AdminResetPasswordPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function AdminResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[40vh] bg-background pt-24" />}>
+      <AdminResetPasswordContent />
+    </Suspense>
   );
 }
