@@ -86,6 +86,18 @@ function defineProductModel(sequelize) {
         defaultValue: false,
         field: "is_new",
       },
+      lowStockNotified: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: "low_stock_notified",
+      },
+      outOfStockNotified: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: "out_of_stock_notified",
+      },
     },
     {
       tableName: "products",

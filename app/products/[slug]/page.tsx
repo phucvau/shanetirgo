@@ -204,7 +204,7 @@ export default function ProductDetailPage() {
             Quay lai danh sách sản phẩm
           </Link>
 
-          {loading ? <p className="py-10 text-muted-foreground">Dang tai chi tiet sản phẩm...</p> : null}
+          {loading ? <p className="py-10 text-muted-foreground">Đang tải chi tiết sản phẩm...</p> : null}
           {error && !product ? <p className="py-10 text-destructive">{error}</p> : null}
 
           {product ? (

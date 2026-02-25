@@ -11,6 +11,7 @@ const { defineAdminUserModel } = require("./src/models/admin-user.model");
 const app = express();
 const port = Number(process.env.PORT || 4002);
 app.use(express.json());
+const productServiceUrl = process.env.PRODUCT_SERVICE_URL || "http://localhost:4001";
 
 const mysqlDatabase =
   process.env.MYSQL_DATABASE ||
@@ -135,6 +136,35 @@ async function sendResetEmail(toEmail, resetLink) {
   return { sent: true };
 }
 
+async function decrementProductStock(items) {
+  const response = await fetch(`${productServiceUrl}/internal/stock/decrement`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const err = new Error(result?.message || "Cannot decrement product stock");
+    err.statusCode = response.status;
+    throw err;
+  }
+
+  return result;
+}
+
+async function compensateProductStock(items) {
+  try {
+    await fetch(`${productServiceUrl}/internal/stock/increment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    });
+  } catch (_) {
+    // ignore compensation failure, only best-effort
+  }
+}
+
 app.get("/health", async (_, res) => {
   try {
     await sequelize.authenticate();
@@ -199,30 +229,55 @@ app.post("/orders", async (req, res) => {
   }
 
   try {
-    const order = await Order.create({
-      customerName: String(customerName),
-      phone: String(phone),
-      city: String(city),
-      district: String(district),
-      ward: String(ward),
-      street: String(street),
-      addressLine: String(addressLine || `${street}, ${ward}, ${district}, ${city}`),
-      note: note ? String(note) : "",
-      items: normalizedItems,
-      itemCount,
-      totalAmount: Number(finalTotal),
-      status: "pending",
-    });
+    const stockPayload = normalizedItems.map((item) => ({
+      productId: Number(item?.productId || 0),
+      quantity: Number(item?.quantity || 0),
+      size: String(item?.size || ""),
+      color: String(item?.color || ""),
+    }));
+    const stockResult = await decrementProductStock(stockPayload);
+    try {
+      const order = await Order.create({
+        customerName: String(customerName),
+        phone: String(phone),
+        city: String(city),
+        district: String(district),
+        ward: String(ward),
+        street: String(street),
+        addressLine: String(addressLine || `${street}, ${ward}, ${district}, ${city}`),
+        note: note ? String(note) : "",
+        items: normalizedItems,
+        itemCount,
+        totalAmount: Number(finalTotal),
+        status: "pending",
+      });
 
-    if (!order.orderCode) {
-      const generatedOrderCode = `ORD-${String(order.id).padStart(6, "0")}`;
-      await order.update({ orderCode: generatedOrderCode });
+      if (!order.orderCode) {
+        const generatedOrderCode = `ORD-${String(order.id).padStart(6, "0")}`;
+        await order.update({ orderCode: generatedOrderCode });
+      }
+
+      const normalizedOrder = normalizeOrder(order);
+      io.emit("order:new", normalizedOrder);
+      const stockAlerts = Array.isArray(stockResult?.alerts) ? stockResult.alerts : [];
+      stockAlerts.forEach((alert) => {
+        io.emit("stock:alert", {
+          type: String(alert?.type || ""),
+          productId: Number(alert?.productId || 0),
+          name: String(alert?.name || ""),
+          stock: Number(alert?.stock || 0),
+        });
+      });
+      return res.status(201).json(normalizedOrder);
+    } catch (error) {
+      await compensateProductStock(stockPayload);
+      throw error;
     }
-
-    const normalizedOrder = normalizeOrder(order);
-    io.emit("order:new", normalizedOrder);
-    return res.status(201).json(normalizedOrder);
   } catch (error) {
+    const statusCode = Number(error?.statusCode || 500);
+    if (statusCode !== 500) {
+      return res.status(statusCode).json({ message: error.message });
+    }
     return res.status(500).json({ message: "Cannot create order", error: error.message });
   }
 });

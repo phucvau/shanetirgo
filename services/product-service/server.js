@@ -165,7 +165,38 @@ function normalizeProduct(product) {
     productStatus: status,
     salePrice: Number.isFinite(salePrice) ? salePrice : null,
     description: String(data.description || ""),
+    lowStockNotified: Boolean(data.lowStockNotified),
+    outOfStockNotified: Boolean(data.outOfStockNotified),
   };
+}
+
+function normalizeVariantValue(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function resolveAlertState({ previousStock, nextStock, lowNotified, outNotified }) {
+  let nextLowNotified = Boolean(lowNotified);
+  let nextOutNotified = Boolean(outNotified);
+  let alert = null;
+
+  if (Number(nextStock) > Number(previousStock) || Number(nextStock) > 5) {
+    nextLowNotified = false;
+    nextOutNotified = false;
+  }
+
+  if (Number(nextStock) === 0) {
+    if (!nextOutNotified) {
+      alert = "out_of_stock";
+      nextOutNotified = true;
+    }
+  } else if (Number(nextStock) <= 5) {
+    if (!nextLowNotified) {
+      alert = "low_stock";
+      nextLowNotified = true;
+    }
+  }
+
+  return { nextLowNotified, nextOutNotified, alert };
 }
 
 function normalizeText(value) {
@@ -322,6 +353,189 @@ app.get("/cloudinary-health", async (_, res) => {
   }
 });
 
+app.post("/internal/stock/decrement", async (req, res) => {
+  const rawItems = Array.isArray(req.body?.items) ? req.body.items : [];
+  if (rawItems.length === 0) {
+    return res.status(400).json({ message: "items are required" });
+  }
+
+  const tx = await sequelize.transaction();
+  try {
+    const alerts = [];
+    const updatedProducts = [];
+
+    for (const rawItem of rawItems) {
+      const productId = Number(rawItem?.productId || 0);
+      const quantity = Number(rawItem?.quantity || 0);
+      const size = String(rawItem?.size || "").trim();
+      const color = String(rawItem?.color || "").trim();
+
+      if (!Number.isInteger(productId) || productId <= 0 || !Number.isFinite(quantity) || quantity <= 0) {
+        throw Object.assign(new Error("Invalid stock payload"), { statusCode: 400 });
+      }
+
+      const product = await Product.findByPk(productId, {
+        transaction: tx,
+        lock: tx.LOCK.UPDATE,
+      });
+      if (!product) {
+        throw Object.assign(new Error(`Product ${productId} not found`), { statusCode: 404 });
+      }
+
+      const prevStock = Number(product.stock || 0);
+      const parsedVariants = parseJsonArray(product.variantStocks).map((item) => ({
+        size: String(item?.size || "").trim(),
+        color: String(item?.color || "").trim(),
+        stock: Number(item?.stock || 0),
+      }));
+
+      let nextStock = prevStock;
+      let nextVariants = parsedVariants;
+      if (parsedVariants.length > 0) {
+        const targetIndex = parsedVariants.findIndex(
+          (item) =>
+            normalizeVariantValue(item.size) === normalizeVariantValue(size) &&
+            normalizeVariantValue(item.color) === normalizeVariantValue(color)
+        );
+        if (targetIndex < 0) {
+          throw Object.assign(
+            new Error(`Variant not found for product ${productId} (${color}/${size})`),
+            { statusCode: 400 }
+          );
+        }
+        const target = parsedVariants[targetIndex];
+        if (Number(target.stock || 0) < quantity) {
+          throw Object.assign(
+            new Error(`Insufficient stock for ${product.name} (${color}/${size})`),
+            { statusCode: 409 }
+          );
+        }
+        target.stock = Number(target.stock || 0) - quantity;
+        nextVariants = parsedVariants;
+        nextStock = nextVariants.reduce((sum, item) => sum + Number(item.stock || 0), 0);
+      } else {
+        if (prevStock < quantity) {
+          throw Object.assign(new Error(`Insufficient stock for ${product.name}`), { statusCode: 409 });
+        }
+        nextStock = prevStock - quantity;
+      }
+
+      const alertState = resolveAlertState({
+        previousStock: prevStock,
+        nextStock,
+        lowNotified: product.lowStockNotified,
+        outNotified: product.outOfStockNotified,
+      });
+
+      await product.update(
+        {
+          stock: nextStock,
+          variantStocks: JSON.stringify(nextVariants),
+          lowStockNotified: alertState.nextLowNotified,
+          outOfStockNotified: alertState.nextOutNotified,
+        },
+        { transaction: tx }
+      );
+
+      if (alertState.alert) {
+        alerts.push({
+          type: alertState.alert,
+          productId: product.id,
+          name: product.name,
+          stock: nextStock,
+        });
+      }
+
+      updatedProducts.push({
+        productId: product.id,
+        stock: nextStock,
+      });
+    }
+
+    await tx.commit();
+    return res.status(200).json({ ok: true, updatedProducts, alerts });
+  } catch (error) {
+    await tx.rollback();
+    const statusCode = Number(error?.statusCode || 500);
+    return res.status(statusCode).json({ message: error.message || "Cannot decrement stock" });
+  }
+});
+
+app.post("/internal/stock/increment", async (req, res) => {
+  const rawItems = Array.isArray(req.body?.items) ? req.body.items : [];
+  if (rawItems.length === 0) {
+    return res.status(400).json({ message: "items are required" });
+  }
+
+  const tx = await sequelize.transaction();
+  try {
+    for (const rawItem of rawItems) {
+      const productId = Number(rawItem?.productId || 0);
+      const quantity = Number(rawItem?.quantity || 0);
+      const size = String(rawItem?.size || "").trim();
+      const color = String(rawItem?.color || "").trim();
+
+      if (!Number.isInteger(productId) || productId <= 0 || !Number.isFinite(quantity) || quantity <= 0) {
+        throw Object.assign(new Error("Invalid stock payload"), { statusCode: 400 });
+      }
+
+      const product = await Product.findByPk(productId, {
+        transaction: tx,
+        lock: tx.LOCK.UPDATE,
+      });
+      if (!product) continue;
+
+      const prevStock = Number(product.stock || 0);
+      const parsedVariants = parseJsonArray(product.variantStocks).map((item) => ({
+        size: String(item?.size || "").trim(),
+        color: String(item?.color || "").trim(),
+        stock: Number(item?.stock || 0),
+      }));
+
+      let nextStock = prevStock;
+      let nextVariants = parsedVariants;
+      if (parsedVariants.length > 0) {
+        const targetIndex = parsedVariants.findIndex(
+          (item) =>
+            normalizeVariantValue(item.size) === normalizeVariantValue(size) &&
+            normalizeVariantValue(item.color) === normalizeVariantValue(color)
+        );
+        if (targetIndex >= 0) {
+          parsedVariants[targetIndex].stock = Number(parsedVariants[targetIndex].stock || 0) + quantity;
+        }
+        nextVariants = parsedVariants;
+        nextStock = nextVariants.reduce((sum, item) => sum + Number(item.stock || 0), 0);
+      } else {
+        nextStock = prevStock + quantity;
+      }
+
+      const alertState = resolveAlertState({
+        previousStock: prevStock,
+        nextStock,
+        lowNotified: product.lowStockNotified,
+        outNotified: product.outOfStockNotified,
+      });
+
+      await product.update(
+        {
+          stock: nextStock,
+          variantStocks: JSON.stringify(nextVariants),
+          lowStockNotified: alertState.nextLowNotified,
+          outOfStockNotified: alertState.nextOutNotified,
+        },
+        { transaction: tx }
+      );
+    }
+
+    await tx.commit();
+    return res.status(200).json({ ok: true });
+  } catch (error) {
+    await tx.rollback();
+    const statusCode = Number(error?.statusCode || 500);
+    return res.status(statusCode).json({ message: error.message || "Cannot increment stock" });
+  }
+});
+
 app.get("/products", async (_, res) => {
   try {
     const products = await Product.findAll({
@@ -407,6 +621,8 @@ app.post("/products", async (req, res) => {
     const product = await Product.create({
       ...payload,
       slug,
+      lowStockNotified: false,
+      outOfStockNotified: false,
     });
     return res.status(201).json(normalizeProduct(product));
   } catch (error) {
@@ -446,6 +662,13 @@ app.patch("/products/:id", async (req, res) => {
         },
       });
       built.data.slug = sameSlugCount > 0 ? `${baseSlug}-${sameSlugCount + 1}` : baseSlug;
+    }
+
+    const currentStock = Number(current.stock || 0);
+    const nextStock = Number(built.data.stock || 0);
+    if (nextStock > currentStock || nextStock > 5) {
+      built.data.lowStockNotified = false;
+      built.data.outOfStockNotified = false;
     }
 
     await product.update(built.data);
