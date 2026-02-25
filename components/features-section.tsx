@@ -4,7 +4,7 @@ const features = [
   {
     icon: Truck,
     title: "Giao hàng miễn phí",
-    description: "Miễn phí vận chuyển cho đơn hàng từ 500.000đ.",
+    description: "Miễn phí vận chuyển cho đơn hàng từ 300.000đ.",
   },
   {
     icon: RefreshCw,

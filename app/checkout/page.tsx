@@ -19,6 +19,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+const SHIPPING_FEE = 15000;
+
+type VoucherId = "free_ship_15k" | "percent_tiered";
+
+type VoucherOption = {
+  id: VoucherId;
+  code: string;
+  name: string;
+  description: string;
+  image: string;
+};
+
+const voucherOptions: VoucherOption[] = [
+  {
+    id: "free_ship_15k",
+    code: "FREESHIP15",
+    name: "Freeship 15.000đ",
+    description: "Giảm phí ship 15.000đ cho đơn từ 300.000đ",
+    image: "/images/logo-shane.png",
+  },
+  {
+    id: "percent_tiered",
+    code: "SALE5_10",
+    name: "Giảm theo mức đơn hàng",
+    description: "Giảm 5% cho đơn từ 500.000đ và 10% cho đơn từ 800.000đ",
+    image: "/images/logo-shane.png",
+  },
+];
 
 type LocationOption = {
   code: number;
@@ -46,6 +81,9 @@ export default function CheckoutPage() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [message, setMessage] = useState("");
   const [locationError, setLocationError] = useState("");
+  const [voucherDialogOpen, setVoucherDialogOpen] = useState(false);
+  const [voucherCodeInput, setVoucherCodeInput] = useState("");
+  const [selectedVoucher, setSelectedVoucher] = useState<VoucherId | null>(null);
 
   const [cityOptions, setCityOptions] = useState<LocationOption[]>([]);
   const [districtOptions, setDistrictOptions] = useState<LocationOption[]>([]);
@@ -131,6 +169,50 @@ export default function CheckoutPage() {
     [items]
   );
 
+  const voucherMeta = useMemo(() => {
+    const freeShipEligible = subtotal >= 300000;
+    const percentEligible = subtotal >= 500000;
+    const percentRate = subtotal >= 800000 ? 0.1 : subtotal >= 500000 ? 0.05 : 0;
+
+    const freeShipDiscount =
+      selectedVoucher === "free_ship_15k" && freeShipEligible ? SHIPPING_FEE : 0;
+    const productDiscount =
+      selectedVoucher === "percent_tiered" && percentEligible
+        ? Math.round(subtotal * percentRate)
+        : 0;
+
+    return {
+      freeShipEligible,
+      percentEligible,
+      percentRate,
+      freeShipDiscount,
+      productDiscount,
+    };
+  }, [selectedVoucher, subtotal]);
+
+  const shippingTotal = Math.max(0, SHIPPING_FEE - voucherMeta.freeShipDiscount);
+  const finalTotal = Math.max(0, subtotal + shippingTotal - voucherMeta.productDiscount);
+
+  function isVoucherSelectable(voucherId: VoucherId) {
+    if (voucherId === "free_ship_15k") return voucherMeta.freeShipEligible;
+    if (voucherId === "percent_tiered") return voucherMeta.percentEligible;
+    return false;
+  }
+
+  function getVoucherStatusText(voucherId: VoucherId) {
+    if (voucherId === "free_ship_15k") {
+      return voucherMeta.freeShipEligible
+        ? "Có thể áp dụng"
+        : "Cần đơn tối thiểu 300.000đ";
+    }
+    if (voucherId === "percent_tiered") {
+      if (subtotal >= 800000) return "Đang áp dụng mức giảm 10%";
+      if (subtotal >= 500000) return "Đang áp dụng mức giảm 5%";
+      return "Cần đơn tối thiểu 500.000đ";
+    }
+    return "";
+  }
+
   async function handlePlaceOrder() {
     if (!fullName.trim() || !phone.trim() || !cityCode || !districtCode || !wardCode || !street.trim()) {
       setMessage("Vui lòng nhập đầy đủ thông tin giao hàng.");
@@ -155,8 +237,14 @@ export default function CheckoutPage() {
           ward: wardName,
           street: street.trim(),
           addressLine: `${street.trim()}, ${wardName}, ${districtName}, ${cityName}`,
-          note: note.trim(),
-          totalAmount: subtotal,
+          note: `${note.trim()}${
+            selectedVoucher
+              ? `${note.trim() ? " | " : ""}Voucher: ${
+                  voucherOptions.find((v) => v.id === selectedVoucher)?.code || ""
+                }`
+              : ""
+          }`,
+          totalAmount: finalTotal,
           items: items.map((item) => ({
             productId: item.productId,
             slug: item.slug,
@@ -308,6 +396,25 @@ export default function CheckoutPage() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="voucher">Voucher</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="voucher"
+                      value={voucherCodeInput}
+                      onChange={(e) => setVoucherCodeInput(e.target.value.toUpperCase())}
+                      placeholder="Nhập mã giảm giá"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setVoucherDialogOpen(true)}
+                    >
+                      Chọn voucher
+                    </Button>
+                  </div>
+                </div>
+
                 {locationError ? (
                   <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                     {locationError}
@@ -361,6 +468,26 @@ export default function CheckoutPage() {
                     <span className="font-semibold">{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Phí vận chuyển</span>
+                    <span className="font-semibold">{formatPrice(SHIPPING_FEE)}</span>
+                  </div>
+                  {voucherMeta.freeShipDiscount > 0 ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-emerald-700">Giảm phí ship</span>
+                      <span className="font-semibold text-emerald-700">-{formatPrice(voucherMeta.freeShipDiscount)}</span>
+                    </div>
+                  ) : null}
+                  {voucherMeta.productDiscount > 0 ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-emerald-700">Giảm giá sản phẩm</span>
+                      <span className="font-semibold text-emerald-700">-{formatPrice(voucherMeta.productDiscount)}</span>
+                    </div>
+                  ) : null}
+                  <div className="flex items-center justify-between border-t border-border pt-2">
+                    <span className="font-medium">Tổng thanh toán</span>
+                    <span className="text-base font-bold">{formatPrice(finalTotal)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Địa chỉ giao</span>
                     <span className="max-w-[65%] text-right text-xs text-muted-foreground">
                       <MapPin className="mr-1 inline h-3.5 w-3.5" />
@@ -385,6 +512,51 @@ export default function CheckoutPage() {
           </div>
         </section>
       </main>
+
+      <Dialog open={voucherDialogOpen} onOpenChange={setVoucherDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl">Chọn voucher</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {voucherOptions.map((voucher) => {
+              const selectable = isVoucherSelectable(voucher.id);
+              const selected = selectedVoucher === voucher.id;
+              return (
+                <button
+                  key={voucher.id}
+                  type="button"
+                  disabled={!selectable}
+                  onClick={() => {
+                    setSelectedVoucher(voucher.id);
+                    setVoucherCodeInput(voucher.code);
+                    setVoucherDialogOpen(false);
+                  }}
+                  className={`grid w-full grid-cols-[56px_1fr_24px] items-center gap-3 rounded-lg border p-3 text-left transition ${
+                    selectable
+                      ? "border-border bg-background hover:bg-muted/40"
+                      : "cursor-not-allowed border-border/50 bg-muted/40 opacity-60"
+                  }`}
+                >
+                  <div className="h-14 w-14 overflow-hidden rounded-md border border-border bg-muted">
+                    <img src={voucher.image} alt={voucher.name} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold">{voucher.name}</p>
+                    <p className="text-xs text-muted-foreground">{voucher.description}</p>
+                    <p className="text-[11px] text-muted-foreground">{getVoucherStatusText(voucher.id)}</p>
+                  </div>
+                  <span
+                    className={`h-5 w-5 rounded-full border ${
+                      selected ? "border-foreground bg-foreground" : "border-muted-foreground/60"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
       <Footer />
     </>
   );

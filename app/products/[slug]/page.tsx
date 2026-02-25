@@ -194,7 +194,7 @@ export default function ProductDetailPage() {
   return (
     <>
       <Navbar />
-      <main className="bg-background pt-24">
+      <main className="products-page-reveal bg-background pt-24">
         <section className="mx-auto max-w-7xl px-6 pb-12 lg:px-8">
           <Link
             href="/products"
