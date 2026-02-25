@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   LayoutDashboard,
   Package,
@@ -47,6 +47,7 @@ const navMain = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
 
   return (
     <Sidebar variant="sidebar" collapsible="none">
@@ -139,7 +140,15 @@ export function AdminSidebar() {
               >
                 <DropdownMenuItem>Ho so</DropdownMenuItem>
                 <DropdownMenuItem>Cai dat</DropdownMenuItem>
-                <DropdownMenuItem>Dang xuat</DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await fetch("/api/admin/auth/logout", { method: "POST" })
+                    router.push("/auth/admin/login")
+                    router.refresh()
+                  }}
+                >
+                  Dang xuat
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

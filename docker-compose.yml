@@ -11,10 +11,12 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      ADMIN_JWT_SECRET: shanetirgo-local-admin-jwt-secret
       PRODUCT_SERVICE_URL: http://product-service:4001
       ORDER_SERVICE_URL: http://order-service:4002
       CATEGORY_SERVICE_URL: http://category-service:4003
       COLLECTION_SERVICE_URL: http://collection-service:4004
+      NEXT_PUBLIC_ORDER_SOCKET_URL: http://localhost:4002
     depends_on:
       product-service:
         condition: service_healthy
@@ -63,6 +65,11 @@ services:
       - "4002:4002"
     environment:
       PORT: 4002
+      WEB_BASE_URL: http://localhost:3000
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: cent1996
+      ADMIN_EMAIL: phucvau16032003@gmail.com
+      ADMIN_RESET_SECRET: change-this-in-production
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
       MYSQL_DATABASE: shanetirgo
